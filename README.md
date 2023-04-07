@@ -5,16 +5,13 @@
 </h3>
 
 <div align="center">
-  <a href="https://www.npmjs.com/package/twitch-notifier"><img src="https://img.shields.io/npm/v/twitch-notifier.svg?style=flat" alt="npm version"></a>
-  <a href="https://nodejs.org/en/"><img src="https://img.shields.io/badge/made%20with-node-1f425f?logo=node.js&.svg" /></a>
+  <a href="https://nodejs.org/en/"><img src="https://img.shields.io/badge/made%20with-javascript-1f425f?logo=javascript&.svg" /></a>
   <a href="https://github.com/lucasvtiradentes/twitch-notifier#contributing"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contributions" /></a>
   <br>
-  <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square" alt="semantic-release"/></a>
-  <a href="https://gitmoji.dev"><img src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square" alt="Gitmoji" /></a>
 </div>
 
 <p align="center">
-  <a href="#dart-features">Features</a> • <a href="#warning-requirements">Requirements</a> • <a href="#bulb-usage">Usage</a> • <a href="#wrench-development">Development</a> • <a href="#books-about">About</a> • <a href="#family-community">Community</a>
+  <a href="#dart-features">Features</a> • <a href="#warning-requirements">Requirements</a> • <a href="#bulb-usage">Usage</a> • <a href="#books-about">About</a>
 </p>
 
 <details>
@@ -29,26 +26,12 @@
         <a href="#bulb-usage">Usage</a>
         <ul>
           <li><a href="#installation">Installation</a></li>
-          <li><a href="#general-tips">General tips</a></li>
-        </ul>
-      </li>
-      <li>
-        <a href="#wrench-development">Development</a>
-        <ul>
-          <li><a href="#development-setup">Development setup</a></li>
-          <li><a href="#used-technologies">Used technologies</a></li>
         </ul>
       </li>
       <li>
         <a href="#books-about">About</a>
         <ul>
-          <li><a href="#related">Related</a></li>
           <li><a href="#license">License</a></li>
-        </ul>
-      </li>
-      <li>
-        <a href="#family-community">Community</a>
-        <ul>
           <li><a href="#contributing">Contributing</a></li>
           <li><a href="#feedback">Feedback</a></li>
         </ul>
@@ -61,18 +44,16 @@
 
 ## :trumpet: Overview
 
-a simple way to get email notifications from your favorite twitch streamers whenever they go live.
+A simple way to get email notifications from your favorite twitch streamers whenever they go live. This is great for disabling mobile twitch notifications for all channels and receive only the ones you like the most ;)
+
+<div align="center">
+<img src="./.github/images/demo.png" width="80%" >
+</div>
 
 ## :dart: Features<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
-&nbsp;&nbsp;&nbsp;✔️ sync your ticktick tasks to google calendar;<br>
-&nbsp;&nbsp;&nbsp;✔️ sync your github commits to google calendar;<br>
-&nbsp;&nbsp;&nbsp;✔️ every completed task in ticktick will be moved to its corresponding completed google calendar;<br>
-&nbsp;&nbsp;&nbsp;✔️ updates corresponding google calendar event in case of changes in ticktick task date or title;<br>
-&nbsp;&nbsp;&nbsp;✔️ option to send a daily summary notification of what gcalsync has done throughout the day;<br>
-&nbsp;&nbsp;&nbsp;✔️ option to sync each ticktick list to a different google calendar agenda;<br>
-&nbsp;&nbsp;&nbsp;✔️ option to ignore certain tasks based on tags;<br>
-&nbsp;&nbsp;&nbsp;✔️ you can add a url link to run the sync function manually whenever you want.<br>
+&nbsp;&nbsp;&nbsp;✔️ send notifications whenever your favorite streamers go live;<br>
+&nbsp;&nbsp;&nbsp;✔️ choose the minimum hour difference from the last notification;<br>
 
 ## :warning: Requirements<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
@@ -85,18 +66,7 @@ The only thing you need to use this solution is a `gmail/google account`.
 To effectively use this project, do the following steps:
 
 <details>
-  <summary>1 - setup the ticktick ics calendars</summary>
-  <div>
-    <br>
-    <p>Go to <a href="https://ticktick.com/webapp/#settings/subscribe">this page</a> and create as many ics calendars as you want to sync. You can create a ics calendar to sync everything, or one calendar per list.<br>
-    Leave this browser tab open because you'll need the ics links in the next steps.
-    </p>
-    <p align="center"><img width="500" src="./.github/images/tutorial/tut1.webp" /></p>
-  </div>
-</details>
-
-<details>
-  <summary>2 - create a Google Apps Scripts (GAS) project</summary>
+  <summary>1 - create a Google Apps Scripts (GAS) project</summary>
   <div>
     <br>
     <p>Go to the <a href="">google apps script</a> and create a new project by clicking in the button showed in the next image.<br>
@@ -106,68 +76,21 @@ To effectively use this project, do the following steps:
 </details>
 
 <details>
-  <summary>3 - setup the twitch-notifier on GAS</summary>
+  <summary>2 - setup the twitch-notifier on GAS</summary>
   <div>
     <br>
     <p>Click on the initial file, which is the <b>rectangle-1</b> on the image.</p>
     <p align="center"><img width="500" src="./.github/images/tutorial/tut3.png" /></p>
-    <p>Replace the initial content present in the <b>rectangle-2</b> with the twitch-notifier code provided bellow.</p>
+    <p>Replace the initial content present in the <b>rectangle-2</b> with the content present in <a href="./src/notifier.js">notifier.js</a>.</p>
     <blockquote>
       <p><span>⚠️ Warning</span><br>
-       Remember to update the <code>configs</code> object according to your data and needs.</p>
+       Remember to update the <code>CONFIGS</code> object according to your data and needs.</p>
     </blockquote>
-    <pre>
-function getConfigs() {
-  const configs = {
-  timeZoneCorrection: -3,
-  streamers: ['razah', 'lucasvtiradentes']
-  };
-  return config
-}
-function getGcalSync(){
-  const version = "1.0.0" // version
-  const gcalSyncContent = UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText();
-  eval(`this.GcalSync = ` + gcalSyncContent);
-  const configs = getConfigs()
-  const gcalSync = new GcalSync(configs);
-  return gcalSync;
-}
-function setup() {
-  const gcalSync = getGcalSync();
-  gcalSync.installGcalSync();
-}
-function remove() {
-  const gcalSync = getGcalSync();
-  gcalSync.uninstallGcalSync();
-}
-function sync(){
-  let gcalSync;
-  try{
-    gcalSync = getGcalSync()
-    gcalSync.sync()
-  } catch(e){
-    if (gcalSync){
-      gcalSync.sendErrorEmail(e.message)
-    }
-  }
-}
-function doGet(e) {
-  let response = {}
-  try{
-    const gcalSync = getGcalSync()
-    const content = gcalSync.sync()
-    const logs = gcalSync.SESSION_LOGS
-    response = {...content, logs}
-  } catch(e){
-    response = {error: e.message}
-  }
-  return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(ContentService.MimeType.JSON)
-}</pre>
   </div>
 </details>
 
 <details>
-  <summary>4 - allow the required google permissions</summary>
+  <summary>3 - allow the required google permissions</summary>
   <div>
     <br>
     <p>Go to the project settings by clicking on the <b>first image rectangle</b>. After that, check the option to show the <code>appsscript.json</code> in our project, a file that manages the required google api access.</p>
@@ -200,21 +123,16 @@ function doGet(e) {
     "https://www.googleapis.com/auth/script.scriptapp",
     "https://www.googleapis.com/auth/script.external_request",
     "https://www.googleapis.com/auth/script.send_mail",
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/calendar"
+    "https://www.googleapis.com/auth/userinfo.email"
   ],
   "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8",
-  "webapp": {
-    "executeAs": "USER_DEPLOYING",
-    "access": "ANYONE_ANONYMOUS"
-  }
+  "runtimeVersion": "V8"
 }</pre>
   </div>
 </details>
 
 <details>
-  <summary>6 - setup the twitch-notifier to run automatically every x minutes</summary>
+  <summary>4 - setup the twitch-notifier to run automatically every x minutes</summary>
   <div>
     <br>
     <p>Just follow what the bellow image shows, which is to select the <code>setup</code> function and run it.<br>
@@ -223,141 +141,13 @@ function doGet(e) {
   </div>
 </details>
 
-<details>
-  <summary>7 - deploy an api to manually run the sync function (optional)</summary>
-  <div>
-    <br>
-    <p>It will allow you to sync whenever you go to a generated link.<br>
-    Just do as the image shows.</p>
-    <p align="center"><img width="500" src="./.github/images/tutorial/tut7.webp" /></p>
-  </div>
-</details>
-
-## :wrench: Development<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
-
-### Development setup
-
-<details>
-  <summary align="center">Instructions for development setup</summary>
-  <div>
-<br>
-To setup this project in your computer, run the following commands:
-
-```bash
-# Clone this repository
-$ git clone https://github.com/lucasvtiradentes/twitch-notifier
-
-# Go into the repository
-$ cd twitch-notifier
-```
-
-After download it, go to the project folder and run these commands:
-
-```bash
-# Install dependencies
-$ npm install
-```
-
-If you want to contribute to the project, fork the project, make the necessary changes, and to test your work you can load your version in apps scripts with almost no effort: replace the content of the <code>getGcalSync</code> with the following code to the apps script:
-
-```js
-function getGcalSync(){
-  const configs = getConfigs()
-  const version = "1.0.0" // version
-  // const gcalSyncContent = getGcalSyncProduction(version)
-  const gcalSyncContent = getGcalSyncDevelopment('yourgithub/gcalsync-fork', 'develop')
-  eval(`this.GcalSync = ` + gcalSyncContent);
-  const gcalSync = new GcalSync(configs)
-  return gcalSync
-}
-
-function getGcalSyncProduction(version){
-  return UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText()
-}
-
-function getGcalSyncDevelopment(repository, branch){
-  const filePath = "dist/GcalSync.min.js"
-  const final_link = `https://api.github.com/repos/${repository}/contents/${filePath}${branch ? `?ref=${branch}` : ''}`
-  const response = UrlFetchApp.fetch(final_link, {'method' : 'get', 'contentType': 'application/json'})
-  const base64Content = JSON.parse(response.toString()).content
-  const decodedArr = Utilities.base64Decode(base64Content);
-  const decodedAsString = Utilities.newBlob(decodedArr).getDataAsString()
-  return decodedAsString
-}
-```
-
-This will make you be able to change the loaded twitch-notifier version.
-  </div>
-</details>
-
-
-### Used technologies
-
-This project uses the following thechnologies:
-
-<div align="center">
-  <table>
-    <tr>
-      <th>Scope</th>
-      <th>Subject</th>
-      <th>Technologies</th>
-    </tr>
-    <tr>
-      <td rowspan="1">Main</td>
-      <td>Main</td>
-      <td align="center">
-        <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white"></a>
-        <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white"></a>
-      </td>
-    </tr>
-    <tr>
-      <td rowspan="3">Setup</td>
-      <td>Code linting</td>
-      <td align="center">
-        <a href="https://github.com/prettier/prettier"><img src="https://img.shields.io/badge/prettier-1A2C34?logo=prettier&logoColor=F7BA3E"></a>
-        <a href="https://github.com/eslint/eslint"><img src="https://img.shields.io/badge/eslint-3A33D1?logo=eslint&logoColor=white"></a>
-      </td>
-    </tr>
-    <tr>
-      <!-- <td rowspan="2">Setup</td> -->
-      <td>Commit linting</td>
-      <td align="center">
-      <a target="_blank" href="https://github.com/conventional-changelog/commitlint"><img src="https://img.shields.io/badge/commitlint-red?logo=commitlint&logoColor=white"></a>
-      <a target="_blank" href="https://github.com/commitizen/cz-cli"><img src="https://img.shields.io/badge/commitizen-pink?logo=conventionalcommits&logoColor=white"></a>
-      <a href="https://gitmoji.dev"><img
-    src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square"
-    alt="Gitmoji"/></a>
-      </td>
-    </tr>
-    <tr>
-      <!-- <td rowspan="2">Setup</td> -->
-      <td>Other</td>
-      <td align="center">
-        <a href="https://editorconfig.org/"><img src="https://img.shields.io/badge/Editor%20Config-E0EFEF?logo=editorconfig&logoColor=000"></a>
-        <a target="_blank" href="https://github.com/typicode/husky"><img src="https://img.shields.io/badge/🐶%20husky-green?logo=husky&logoColor=white"></a>
-        <a target="_blank" href="https://github.com/okonet/lint-staged"><img src="https://img.shields.io/badge/🚫%20lint%20staged-yellow?&logoColor=white"></a>
-      </td>
-    </tr>
-  </table>
-</div>
-
 <a href="#"><img src="./.github/images/divider.png" /></a>
 
 ## :books: About<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
-## Related
-
-The most related links to this project are:
-
-- [GAS-ICS-Sync](https://github.com/derekantrican/GAS-ICS-Sync): A Google Apps Script for syncing ICS/ICAL files faster than the current Google Calendar speed. This was my main inspiration;
-
 ## License
 
 This project is distributed under the terms of the MIT License Version 2.0. A complete version of the license is available in the [LICENSE](LICENSE) file in this repository. Any contribution made to this project will be licensed under the MIT License Version 2.0.
-
-<a href="#"><img src="./.github/images/divider.png" /></a>
-
-## :family: Community<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
 ## Contributing
 
