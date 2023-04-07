@@ -5,9 +5,9 @@
 </h3>
 
 <div align="center">
-  <a href="https://www.npmjs.com/package/gcal-sync"><img src="https://img.shields.io/npm/v/gcal-sync.svg?style=flat" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/twitch-notifier"><img src="https://img.shields.io/npm/v/twitch-notifier.svg?style=flat" alt="npm version"></a>
   <a href="https://nodejs.org/en/"><img src="https://img.shields.io/badge/made%20with-node-1f425f?logo=node.js&.svg" /></a>
-  <a href="https://github.com/lucasvtiradentes/gcal-sync#contributing"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contributions" /></a>
+  <a href="https://github.com/lucasvtiradentes/twitch-notifier#contributing"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contributions" /></a>
   <br>
   <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square" alt="semantic-release"/></a>
   <a href="https://gitmoji.dev"><img src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square" alt="Gitmoji" /></a>
@@ -100,18 +100,18 @@ To effectively use this project, do the following steps:
   <div>
     <br>
     <p>Go to the <a href="">google apps script</a> and create a new project by clicking in the button showed in the next image.<br>
-    It would be a good idea to rename the project to something like "gcal-sync".</p>
+    It would be a good idea to rename the project to something like "twitch-notifier".</p>
     <p align="center"><img width="500" src="./.github/images/tutorial/tut2.png" /></p>
   </div>
 </details>
 
 <details>
-  <summary>3 - setup the gcal-sync on GAS</summary>
+  <summary>3 - setup the twitch-notifier on GAS</summary>
   <div>
     <br>
     <p>Click on the initial file, which is the <b>rectangle-1</b> on the image.</p>
     <p align="center"><img width="500" src="./.github/images/tutorial/tut3.png" /></p>
-    <p>Replace the initial content present in the <b>rectangle-2</b> with the gcal-sync code provided bellow.</p>
+    <p>Replace the initial content present in the <b>rectangle-2</b> with the twitch-notifier code provided bellow.</p>
     <blockquote>
       <p><span>⚠️ Warning</span><br>
        Remember to update the <code>configs</code> object according to your data and needs.</p>
@@ -119,44 +119,14 @@ To effectively use this project, do the following steps:
     <pre>
 function getConfigs() {
   const configs = {
-    ticktickSync: {
-      icsCalendars: [
-        ['webcal://icscal1.ics', 'gcal_1', 'gcal_completed'],                             // everything will be synced
-        ['webcal://icscal2.ics', 'gcal_2', 'gcal_completed', { tag: '#FUN' }],            // everything will be synced, but marks all tasks with a label
-        ['webcal://icscal3.ics', 'gcal_all', 'gcal_completed', { ignoredTags: ['#FUN'] }] // everything will be synced, excepts tasks with the specifieds labels
-      ]
-    },
-    githubSync: {
-      username: "githubusername",   // github username
-      googleCalendar: "gh_commits", // google calendar to isnert commits as events
-      personalToken: '',            // github token, required if you want to sync private repo commits
-      ignoredRepos: [],             // ignored repositories string array: ['repo1', 'repo2']
-      parseGithubEmojis: true       // parse string emojis to emojis
-    },
-    datetime: {
-      dailyEmailsTime: '23:30',     // time to email the summary
-      timeZoneCorrection: -3        // difference from utc time
-    },
-    options: {
-      syncTicktick: true,           // option to sync ticktick tasks
-      syncGithub: true,             // option to sync github commits
-      emailErrors: false,           // email runtime errors
-      emailSession: false,          // email sessions with modifications
-      emailDailySummary: true,      // email daily summary at a specified time
-      emailNewRelease: true,        // email if there is a new version available
-      showLogs: true,               // show runtime information
-      maintanceMode: false          // option to not create, delete, update anything
-    },
-    settings: {
-      syncFunction: 'sync',         // function name to run every x minutes
-      updateFrequency: 5            // wait time between sync checks
-    }
-  }
+  timeZoneCorrection: -3,
+  streamers: ['razah', 'lucasvtiradentes']
+  };
   return config
 }
 function getGcalSync(){
   const version = "0.0.1" // version
-  const gcalSyncContent = UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/gcal-sync@${version}`).getContentText();
+  const gcalSyncContent = UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText();
   eval(`this.GcalSync = ` + gcalSyncContent);
   const configs = getConfigs()
   const gcalSync = new GcalSync(configs);
@@ -244,7 +214,7 @@ function doGet(e) {
 </details>
 
 <details>
-  <summary>6 - setup the gcal-sync to run automatically every x minutes</summary>
+  <summary>6 - setup the twitch-notifier to run automatically every x minutes</summary>
   <div>
     <br>
     <p>Just follow what the bellow image shows, which is to select the <code>setup</code> function and run it.<br>
@@ -275,10 +245,10 @@ To setup this project in your computer, run the following commands:
 
 ```bash
 # Clone this repository
-$ git clone https://github.com/lucasvtiradentes/gcal-sync
+$ git clone https://github.com/lucasvtiradentes/twitch-notifier
 
 # Go into the repository
-$ cd gcal-sync
+$ cd twitch-notifier
 ```
 
 After download it, go to the project folder and run these commands:
@@ -302,7 +272,7 @@ function getGcalSync(){
 }
 
 function getGcalSyncProduction(version){
-  return UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/gcal-sync@${version}`).getContentText()
+  return UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText()
 }
 
 function getGcalSyncDevelopment(repository, branch){
@@ -316,7 +286,7 @@ function getGcalSyncDevelopment(repository, branch){
 }
 ```
 
-This will make you be able to change the loaded gcal-sync version.
+This will make you be able to change the loaded twitch-notifier version.
   </div>
 </details>
 
@@ -393,7 +363,7 @@ This project is distributed under the terms of the MIT License Version 2.0. A co
 
 If you are a typescript developer, we would kind and happy accept your help:
 
-- The best way to get started is to select any issue from the [`good-first-issue`](https://github.com/lucasvtiradentes/gcal-sync/issues) label;
+- The best way to get started is to select any issue from the [`good-first-issue`](https://github.com/lucasvtiradentes/twitch-notifier/issues) label;
 - If you would like to contribute, please review our [Contributing guide](docs/CONTRIBUTING.md) for all relevant details.
 
 Another ways to positivily impact this project is to:
@@ -407,7 +377,7 @@ Another ways to positivily impact this project is to:
 
 Any questions or suggestions? You are welcome to discuss it on:
 
-- [Github issues](https://github.com/lucasvtiradentes/gcal-sync/issues)
+- [Github issues](https://github.com/lucasvtiradentes/twitch-notifier/issues)
 - [Email](mailto:lucasvtiradentes@gmail.com)
 
 <a href="#"><img src="./.github/images/divider.png" /></a>

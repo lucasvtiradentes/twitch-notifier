@@ -2,7 +2,7 @@
 
 module.exports = {
   branches: ['master'],
-  repository: 'https://github.com/lucasvtiradentes/gcal-sync',
+  repository: 'https://github.com/lucasvtiradentes/twitch-notifier',
   plugins: [
     [
       '@semantic-release/commit-analyzer',

@@ -1,53 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-/*
-  function checkIfRazahIsOnline(){
-
-    const TIMEZONE_FIXER = -3
-    const PROPERTIES = PropertiesService.getScriptProperties()
-    const CUR_DATETIME = getDatefixedByTimezone(TIMEZONE_FIXER).toISOString()
-    const LAST_DATETIME = PROPERTIES.getProperty('LAST_NOTIFY')
-    const MINUTES_SINCE_LAST_NOTIFY = Math.floor((Math.abs(getDatefixedByTimezone(TIMEZONE_FIXER, new Date(CUR_DATETIME)) - getDatefixedByTimezone(TIMEZONE_FIXER, new Date(LAST_DATETIME)))/1000)/60)
-
-    if (MINUTES_SINCE_LAST_NOTIFY < 6*60){
-      console.log(`ignoring since was notified less then 6 hours ago: ${LAST_DATETIME}`)
-      return
-    }
-
-    const streamsToNotify = ['razah']
-    const onlineStreams = streamsToNotify.filter(channel => isTwitchStreamChannelLive(channel))
-
-    if (onlineStreams.length > 0){
-      sendEmail(onlineStreams[0])
-      PROPERTIES.setProperty('LAST_NOTIFY', CUR_DATETIME);
-    }
-  }
-
-  function getDatefixedByTimezone(timeZoneIndex, date = new Date()){
-    date.setHours(date.getHours() + timeZoneIndex);
-    return date
-  }
-  function getTwitchLink(channel){
-    return `https://www.twitch.tv/${channel}`
-  }
-
-  function isTwitchStreamChannelLive(channel){
-    const response = UrlFetchApp.fetch(getTwitchLink(channel));
-    const bodyContent = response.getContentText()
-    const isChannelLive = bodyContent.includes('isLiveBroadcast')
-    return isChannelLive
-  }
-
-  function sendEmail(channel){
-    MailApp.sendEmail({
-        to: "lucasvtiradentes@gmail.com",
-        subject: "Razah tá online",
-        htmlBody: "Oi, <br> <br>" +
-                  `O razão tá online: ${getTwitchLink(channel)}`
-    });
-  }
-*/
-
 type Config = {
   timeZoneCorrection: number;
   streamers: string[];
@@ -55,7 +7,7 @@ type Config = {
 
 type Environment = 'production' | 'development';
 
-class GcalSync {
+class TwitchNotifier {
   public config: Config;
 
   VERSION = ''; // version
@@ -64,6 +16,9 @@ class GcalSync {
   ENVIRONMENT = this.detectEnvironment();
   TODAY_DATE = '';
   USER_EMAIL = this.ENVIRONMENT === 'production' ? this.getUserEmail() : '';
+  APPS_SCRIPT_PROPERTIES: {
+    streamers: 'streamers';
+  };
   ERRORS = {
     productionOnly: 'This method cannot run in non-production environments',
     mustSpecifyConfig: 'You must specify the settings when starting the class'
@@ -128,8 +83,81 @@ class GcalSync {
   }
 
   /* MAIN FUNCTIONS ========================================================= */
+  private getGoogleAppsScriptPropertyObject() {
+    if (this.ENVIRONMENT === 'development') {
+      throw new Error(this.ERRORS.productionOnly);
+    }
+
+    return PropertiesService.getScriptProperties();
+  }
+
+  private getProperty(property: string) {
+    return this.getGoogleAppsScriptPropertyObject().getProperty(property);
+  }
+
+  private updateProperty(property: string, newContent: string) {
+    this.getGoogleAppsScriptPropertyObject().setProperty(property, newContent);
+  }
+  /* MAIN FUNCTIONS ========================================================= */
 
   private checkChannels() {
-    console.log('channels');
+    const currentDateTime = this.getDateFixedByTimezone(this.config.timeZoneCorrection).toISOString();
+    console.log(currentDateTime);
+
+    const currentStreamerNotifications = this.getProperty(this.APPS_SCRIPT_PROPERTIES.streamers);
+    console.log(currentStreamerNotifications);
+
+    Promise.all(this.config.streamers.map((channel) => this.isTwitchStreamChannelLive(channel))).then((values) => {
+      const onlineStreams = this.config.streamers.filter((_item, index) => values[index]);
+      console.log(onlineStreams);
+
+      if (onlineStreams.length > 0) {
+        this.sendEmail(onlineStreams);
+      }
+    });
+  }
+
+  //   const PROPERTIES = PropertiesService.getScriptProperties();
+  //   const LAST_DATETIME = PROPERTIES.getProperty('LAST_NOTIFY');
+  //   const MINUTES_SINCE_LAST_NOTIFY = Math.floor(Math.abs(Number(this.getDatefixedByTimezone(TIMEZONE_FIXER, new Date(CUR_DATETIME))) - Number(this.getDatefixedByTimezone(TIMEZONE_FIXER, new Date(LAST_DATETIME)))) / 1000 / 60);
+
+  //   if (MINUTES_SINCE_LAST_NOTIFY < 6 * 60) {
+  //     console.log(`ignoring since was notified less then 6 hours ago: ${LAST_DATETIME}`);
+  //     return;
+  //   }
+
+  /* ======================================================================== */
+
+  getTwitchLink(channel: string) {
+    return `https://www.twitch.tv/${channel}`;
+  }
+
+  isTwitchStreamChannelLive(channel: string) {
+    return new Promise((resolve, reject) => {
+      const channelUrl = this.getTwitchLink(channel);
+
+      if (this.ENVIRONMENT === 'production') {
+        const response = UrlFetchApp.fetch(channelUrl);
+        resolve(response.getContentText().includes('isLiveBroadcast'));
+      } else {
+        fetch(channelUrl).then((data) => {
+          data.text().then((dt) => resolve(dt.includes('isLiveBroadcast')));
+        });
+      }
+    });
+  }
+
+  sendEmail(channels: string[]) {
+    const content = 'Oi, <br> <br>\n' + `<ul>\n${`${channels.map((channel) => `<li>${channel} tá online: ${this.getTwitchLink(channel)}</li>`).join('<br>')}`}\n</ul>`;
+
+    this.logger(`email sent to: ${this.USER_EMAIL}`);
+
+    if (this.ENVIRONMENT === 'production') {
+      MailApp.sendEmail({
+        to: this.USER_EMAIL,
+        subject: `streamers online: ${channels.splice(0, 4).join(', ')}`,
+        htmlBody: content
+      });
+    }
   }
 }

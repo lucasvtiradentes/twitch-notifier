@@ -35,7 +35,7 @@ jobs:
 
   nodejs-ci:
     needs: [info]
-    uses: lucasvtiradentes/gcal-sync/.github/workflows/reusable-nodejs-ci.yml@master
+    uses: lucasvtiradentes/twitch-notifier/.github/workflows/reusable-nodejs-ci.yml@master
 
   publish:
     needs: [nodejs-ci]
