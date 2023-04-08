@@ -6,8 +6,8 @@
 
 <div align="center">
   <a href="https://nodejs.org/en/"><img src="https://img.shields.io/badge/made%20with-javascript-1f425f?logo=javascript&.svg" /></a>
+  <a href="https://www.google.com/script/start/"><img src="https://img.shields.io/badge/apps%20script-4285F4?logo=google&logoColor=white" /></a>
   <a href="https://github.com/lucasvtiradentes/twitch-notifier#contributing"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contributions" /></a>
-  <br>
 </div>
 
 <p align="center">
@@ -44,11 +44,13 @@
 
 ## :trumpet: Overview
 
-A simple way to get email notifications from your favorite twitch streamers whenever they go live. This is great for disabling mobile twitch notifications for all channels and receive only the ones you like the most ;)
+A simple way to get email notifications from your favorite twitch streamers whenever they go live.
 
 <div align="center">
-<img src="./.github/images/demo.png" width="80%" >
+<img src="./.github/images/demo.webp" width="80%" >
 </div>
+
+Why? because twitch mobile app notifications are overwhelming, so I disabled then all and prefer receiving only alerts about my favorite streamers ([razah](https://www.twitch.tv/razah) and [theprimeagen](https://www.twitch.tv/theprimeagen)) through email ;)
 
 ## :dart: Features<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
