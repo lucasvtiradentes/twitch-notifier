@@ -1,5 +1,5 @@
 const CONFIGS = {
-  channels: ['mch_agg', 'lucasvtiradentes', 'razah', 'gaules', 'jay3', 'tony_lvl']
+  channels: ['razah', 'theprimeagen']
 }
 
 /* MAIN ========================================================================================= */
@@ -80,6 +80,12 @@ function helperFunctions(){
   /* GOOGLE APPS SCRIPTS TRIGGERS ------------------------------------------- */
 
   function addAppsScriptsTrigger(functionName, minutesLoop) {
+    const tickSyncTrigger = ScriptApp.getProjectTriggers().find((item) => item.getHandlerFunction() === functionName);
+
+    if (tickSyncTrigger) {
+      removeAppsScriptsTrigger(functionName)
+    }
+
     ScriptApp.newTrigger(functionName).timeBased().everyMinutes(minutesLoop).create();
   }
 
@@ -157,10 +163,10 @@ function helperFunctions(){
       const tableRowStyle = `style="width: 100%; text-align: center;"`;
       const tableRowColumnStyle = `style="border: 1px solid #333"`;
 
-      const header = `<tr ${tableRowStyle}">\n<th ${tableRowColumnStyle} width="40px">channel</th><th ${tableRowColumnStyle} width="60px">uptime</th><th ${tableRowColumnStyle} width="300px">details</th>\n</tr>`;
+      const header = `<tr ${tableRowStyle}">\n<th ${tableRowColumnStyle} width="100px">channel</th><th ${tableRowColumnStyle} width="100px">uptime</th><th ${tableRowColumnStyle} width="auto">details</th>\n</tr>`;
 
       const getTableBodyItemsHtml = () => {
-        return chanArr.map(item => `<tr ${tableRowStyle}">\n${[`<div style="text-align: center;"><a href="${item.streamLink}"><img src="${item.streamImage}" width="80" style="border-radius: 50%"></a><br><a href="${item.streamLink}">${item.streamName}</a></div>`, `${item.streamLiveUptimeParsed}`, `<div>${`<img src="${item.streamLivePreviewImage}" width="300">`}<br><p>${item.streamLiveDescription}</p></div>`].map(it => `<td ${tableRowColumnStyle}>&nbsp;&nbsp;${it}</td>`).join('\n')}\n</tr>`).join("")
+        return chanArr.map(item => `<tr ${tableRowStyle}">\n${[`<div style="text-align: center;"><a href="${item.streamLink}"><img src="${item.streamImage}" width="80" style="border-radius: 50%"></a><br><a href="${item.streamLink}">${item.streamName}</a></div>`, `${item.streamLiveUptimeParsed}`, `<div>${`<img src="${item.streamLivePreviewImage}" width="60%">`}<br><p>${item.streamLiveDescription}</p></div>`].map(it => `<td ${tableRowColumnStyle}>&nbsp;&nbsp;${it}</td>`).join('\n')}\n</tr>`).join("")
       }
 
       const table = `<center>\n<table ${tableStyle}>\n${header}\n${getTableBodyItemsHtml()}\n</table>\n</center>`
