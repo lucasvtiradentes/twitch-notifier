@@ -44,7 +44,7 @@
 
 ## :trumpet: Overview
 
-A simple way to get email notifications from your favorite twitch streamers whenever they go live.
+A simple way to get email notifications whenever your favorite twitch streamers go live.
 
 <div align="center">
 <img src="./.github/images/demo.webp" width="80%" >
