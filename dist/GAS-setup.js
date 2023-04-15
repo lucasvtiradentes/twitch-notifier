@@ -17,7 +17,7 @@ const CONFIGS = {
 };
 
 function getTwitchNotifier(){
-  const version = "0.0.1"
+  const version = "1.0.0"
   const content = UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText();
   eval(content)
   const twitchNotifier = new TwitchNotifier(CONFIGS)

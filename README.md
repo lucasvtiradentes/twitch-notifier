@@ -146,7 +146,7 @@ const CONFIGS = {
 };
 
 function getTwitchNotifier(){
-  const version = "0.0.1"
+  const version = "1.0.0"
   const content = UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText();
   eval(content)
   const twitchNotifier = new TwitchNotifier(CONFIGS)
@@ -274,7 +274,7 @@ If you want to [contribute](./docs/CONTRIBUTING.md) to the project, fork the pro
 
 ```js
 function getTwitchNotifier() {
-  // const version = "0.0.1" // version
+  // const version = "1.0.0" // version
   // const content = getTwitchNotifierProduction(version)
   const content = getTwitchNotifierDevelopment('yourgithub/project-fork', 'develop');
   eval(content);
