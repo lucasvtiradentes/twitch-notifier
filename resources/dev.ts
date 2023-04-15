@@ -3,4 +3,8 @@ import TwitchNotifier from '../src/TwitchNotifier';
 
 const twitchNotifier = new TwitchNotifier(configs);
 
-console.log(twitchNotifier);
+twitchNotifier.getTwichStreamersData().then((data) => {
+  const filtered = twitchNotifier.filterStreamersToNotify(data);
+  console.log(data);
+  console.log(data.length, filtered.length);
+});

@@ -31,7 +31,8 @@
     "prepare": "husky install",
     "commit": "cz",
     "lint:staged": "lint-staged --concurrent false --quiet",
-    "scripts:postbuild": "tsx ./scripts/post-build.ts"
+    "scripts:postbuild": "tsx ./scripts/post-build.ts",
+    "scripts:fetch": "tsx ./src/fetch.ts"
   },
   "dependencies": {
     "dyn-markdown": "^1.2.0",

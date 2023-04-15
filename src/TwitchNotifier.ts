@@ -8,17 +8,21 @@ type ChannelRow = [string, ChannelOption];
 type Config = {
   twitch: {
     channels: ChannelRow[];
-    disabledHours: number[];
     ignoredWords: string[];
   };
   settings: {
     timeZoneCorrection: number;
     minutesBetweenChecks: number;
+    disabledHours: number[];
     checkFunction: string;
   };
 };
 
-type Environment = 'production' | 'development';
+type NotifiedTwitchStreamName = string;
+type NotifiedTwitchStreamDatetime = string;
+type NotifiedTwitchStream = [NotifiedTwitchStreamName, NotifiedTwitchStreamDatetime];
+
+type Environment = 'google_apps_script' | 'browser' | 'nodejs';
 
 type ChannelWithInfo = {
   streamName: string;
@@ -33,32 +37,34 @@ type ChannelWithInfo = {
 };
 
 export default class TwitchNotifier {
-  VERSION = ''; // version
-  APPNAME = 'twitch-notifier';
-  GITHUB_REPOSITORY = 'lucasvtiradentes/twitch-notifier';
-  ENVIRONMENT = this.detectEnvironment();
-  TODAY_DATE = '';
-  CURRENT_DATETIME = '';
-  SESSION_LOGS = [];
-  USER_EMAIL = this.ENVIRONMENT === 'production' ? this.getUserEmail() : '';
-  PROPERTY_DIVIDER = ` | `;
-  MIN_HOURS_BETWEEN_NOTIFICATIONS: 2;
-  APPS_SCRIPTS_PROPERTIES = {
+  private VERSION = ''; // version
+  private APPNAME = 'twitch-notifier';
+  private GITHUB_REPOSITORY = 'lucasvtiradentes/twitch-notifier';
+  private ENVIRONMENT = this.detectEnvironment();
+  private TODAY_DATE = '';
+  private CURRENT_DATETIME = this.getDatefixedByTimezone(new Date()).toISOString();
+  private SESSION_LOGS = [];
+  private USER_EMAIL = this.ENVIRONMENT === 'google_apps_script' ? this.getUserEmail() : '';
+  private PROPERTY_DIVIDER = ` | `;
+  private MIN_HOURS_BETWEEN_NOTIFICATIONS: 2;
+  private APPS_SCRIPTS_PROPERTIES = {
     lastNotify: 'LAST_NOTIFY'
   };
-  ERRORS = {
+  private ERRORS = {
     productionOnly: 'This method cannot run in non-production environments',
     mustSpecifyConfig: 'You must specify the settings when starting the class',
     httpsError: 'You provided an invalid ICS calendar link: '
   };
 
-  constructor(public config: Config) {
+  constructor(private config: Config) {
     this.validateConfigs(config);
     this.config = config;
     this.TODAY_DATE = this.getDateFixedByTimezone(this.config.settings.timeZoneCorrection).toISOString().split('T')[0];
     this.logger(`${this.APPNAME} is running at version ${this.VERSION} in ${this.ENVIRONMENT} environment`);
     this.logger(`check the docs for your version here: ${`https://github.com/${this.GITHUB_REPOSITORY}/tree/v${this.VERSION}#readme`}`);
   }
+
+  /* VALIDATION FUNCTION ==================================================== */
 
   private validateConfigs(config: Config) {
     if (!config) {
@@ -68,8 +74,8 @@ export default class TwitchNotifier {
     // prettier-ignore
     const validationArr = [
       { objToCheck: config, requiredKeys: ['twitch', 'settings'], name: 'configs' },
-      { objToCheck: config.twitch, requiredKeys: ['channels', 'disabledHours', 'ignoredWords', ], name: 'configs.twitch' },
-      { objToCheck: config.settings, requiredKeys: ['timeZoneCorrection', 'checkFunction', 'minutesBetweenChecks'], name: 'configs.settings' },
+      { objToCheck: config.twitch, requiredKeys: ['channels', 'ignoredWords', ], name: 'configs.twitch' },
+      { objToCheck: config.settings, requiredKeys: ['timeZoneCorrection', 'disabledHours', 'checkFunction', 'minutesBetweenChecks'], name: 'configs.settings' },
     ];
 
     validationArr.forEach((item) => {
@@ -80,13 +86,23 @@ export default class TwitchNotifier {
         }
       });
     });
+
+    this.config.twitch.channels.forEach((channel) => {
+      if (channel[1].ignoredWords && channel[1].searchedWords) {
+        throw new Error(`you must specify only one filter parameter in channel [${channel[0]}]: ignoredWords OR searchedWords`);
+      }
+    });
   }
 
+  /* HELPER FUNCTIONS ======================================================= */
+
   private detectEnvironment(): Environment {
-    if (typeof Calendar === 'undefined') {
-      return 'development';
+    if (typeof MailApp === 'object') {
+      return 'google_apps_script';
+    } else if (typeof window === 'object') {
+      return 'browser';
     } else {
-      return 'production';
+      return 'nodejs';
     }
   }
 
@@ -95,151 +111,91 @@ export default class TwitchNotifier {
     console.log(message);
   }
 
-  /* HELPER FUNCTIONS ======================================================= */
-
   private getDateFixedByTimezone(timeZoneIndex: number) {
     const date = new Date();
     date.setHours(date.getHours() + timeZoneIndex);
     return date;
   }
 
-  /* GOOGL APSS SCRIPT EMAIL ================================================ */
-
-  private getUserEmail() {
-    return Session.getActiveUser().getEmail();
-  }
-
-  /* ======================================================================== */
-
-  check() {
-    this.addMissingProperties();
-    const channelsInfo = this.getChannelsInformation();
-    const channelsToNotify = this.getChannelsToNotify(channelsInfo);
-
-    if (channelsToNotify.length > 0) {
-      this.sendEmail(channelsToNotify);
-      this.updateNotifiedChannels(channelsToNotify);
-      this.logger(`notified about ${channelsToNotify.length} live streamers`);
-    } else {
-      this.logger('no streamers went live recently');
-      this.logger(this.showNextChannelsToNotify(channelsInfo));
-    }
-  }
-
-  setup() {
-    this.logger('installed looping');
-    this.addAppsScriptsTrigger(this.config.settings.checkFunction, this.config.settings.minutesBetweenChecks);
-    this.addMissingProperties();
-  }
-
-  uninstall() {
-    this.logger('uninstalled looping');
-    this.removeAppsScriptsTrigger(this.config.settings.checkFunction);
-    this.removeAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify);
-  }
-
-  addMissingProperties() {
-    if (!this.getAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify)) {
-      this.updateAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify, '');
-    }
-  }
-
-  /* ======================================================================== */
-
-  /* APPS SCRIPT PROPERTY FUNCTIONS ----------------------------------------- */
-
-  removeAppsScriptProperty(property: string) {
-    return PropertiesService.getScriptProperties().deleteProperty(property);
-  }
-
-  getAppsScriptProperty(property: string) {
-    return PropertiesService.getScriptProperties().getProperty(property);
-  }
-
-  updateAppsScriptProperty(property: string, newContent: string) {
-    return PropertiesService.getScriptProperties().setProperty(property, newContent);
-  }
-
-  /* GOOGLE APPS SCRIPTS TRIGGERS ------------------------------------------- */
-
-  addAppsScriptsTrigger(functionName: string, minutesLoop: number) {
-    const tickSyncTrigger = ScriptApp.getProjectTriggers().find((item) => item.getHandlerFunction() === functionName);
-
-    if (tickSyncTrigger) {
-      this.removeAppsScriptsTrigger(functionName);
-    }
-
-    ScriptApp.newTrigger(functionName).timeBased().everyMinutes(minutesLoop).create();
-  }
-
-  removeAppsScriptsTrigger(functionName: string) {
-    const tickSyncTrigger = ScriptApp.getProjectTriggers().find((item) => item.getHandlerFunction() === functionName);
-
-    if (tickSyncTrigger) {
-      ScriptApp.deleteTrigger(tickSyncTrigger);
-    }
-  }
-
-  /* DATE TIME FUNCTIONS ---------------------------------------------------- */
-
-  getDatefixedByTimezone(date: Date) {
+  private getDatefixedByTimezone(date: Date) {
     const diffHoursFromUtc = -3;
     date.setHours(date.getHours() + diffHoursFromUtc);
     return date;
   }
 
-  getMinutesDiff(dateOne: Date, dateTwo: Date) {
+  private getMinutesDiff(dateOne: Date, dateTwo: Date) {
     const minutes = Math.floor(Math.abs(Number(this.getDatefixedByTimezone(new Date(dateTwo))) - Number(this.getDatefixedByTimezone(new Date(dateOne)))) / 1000 / 60);
     return minutes;
   }
 
-  /* TWITCH FUNCTIONS ------------------------------------------------------- */
+  /* SPECIAL FUNCTIONS ====================================================== */
 
-  getTwitchLink(channel: string) {
-    return `https://www.twitch.tv/${channel}`;
-  }
-
-  getTwitchStreamCompleteInfo(channel: string) {
-    const response = UrlFetchApp.fetch(this.getTwitchLink(channel));
-    const bodyContent = response.getContentText();
-    const streamInfoData = this.extractLiveInformation(bodyContent, channel);
-    return streamInfoData;
-  }
-
-  extractLiveInformation(htmlContent: string, channel: string) {
-    let data = htmlContent.split('<script type="application/ld+json">')[1];
-    let image = '';
-
-    if (data) {
-      image = htmlContent.split('content="https://static-cdn')[1];
-      image = 'https://static-cdn' + image.split('"')[0];
-      data = data.split('</script>')[0];
-      data = JSON.parse(data);
-      data = data[0];
+  private getScriptFunction() {
+    if (this.ENVIRONMENT !== 'google_apps_script') {
+      throw new Error(this.ERRORS.productionOnly);
     }
 
-    const dataObject: any = data;
-    const streamLiveStartDatetime = dataObject ? this.getDatefixedByTimezone(new Date(dataObject.uploadDate)).toISOString() : '';
-    const uptime = this.getMinutesDiff(new Date(this.CURRENT_DATETIME), new Date(streamLiveStartDatetime));
-
-    const parsedData: ChannelWithInfo = {
-      streamName: channel,
-      streamLink: this.getTwitchLink(channel),
-      streamImage: image,
-      streamIsLive: dataObject?.publication.isLiveBroadcast ?? false,
-      streamLiveDescription: dataObject?.description ?? '',
-      streamLivePreviewImage: dataObject?.thumbnailUrl[2] ?? '',
-      streamLiveStartDatetime: streamLiveStartDatetime,
-      streamLiveUptimeMinutes: uptime,
-      streamLiveUptimeParsed: uptime > 60 ? `${Math.trunc(uptime / 60)} hours<br>${uptime - Math.trunc(uptime / 60) * 60} minutes` : isNaN(uptime) === false ? `${uptime} minutes` : ''
-    };
-
-    return parsedData;
+    return ScriptApp;
   }
 
-  /* EMAIL FUNCTIONS -------------------------------------------------------- */
+  private getPropertyFunction() {
+    if (this.ENVIRONMENT !== 'google_apps_script') {
+      throw new Error(this.ERRORS.productionOnly);
+    }
 
-  generateEmailContent(chanArr: ChannelWithInfo[]) {
+    return PropertiesService;
+  }
+
+  private getFetchFunction() {
+    if (this.ENVIRONMENT !== 'google_apps_script') {
+      throw new Error(this.ERRORS.productionOnly);
+    }
+
+    return UrlFetchApp.fetch;
+  }
+
+  private getEmailFunction() {
+    if (this.ENVIRONMENT !== 'google_apps_script') {
+      throw new Error(this.ERRORS.productionOnly);
+    }
+
+    return MailApp.sendEmail;
+  }
+
+  /* ======================================================================== */
+
+  private getContent(url: string): Promise<string> {
+    return new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('https').get(url, (res) => {
+        let finalContent = '';
+
+        res.on('data', (d) => {
+          finalContent += d;
+        });
+
+        res.on('end', () => {
+          resolve(finalContent);
+        });
+      });
+    });
+  }
+
+  private async getPageContent(url: string) {
+    let htmlContent = '';
+    if (this.ENVIRONMENT === 'google_apps_script') {
+      const fetchFunction = this.getFetchFunction();
+      const response = fetchFunction(url);
+      htmlContent = response.getContentText();
+    } else if (this.ENVIRONMENT === 'nodejs') {
+      htmlContent = await this.getContent(url);
+    }
+    return htmlContent;
+  }
+
+  /* EMAIL FUNCTIONS ======================================================== */
+
+  private generateEmailContent(chanArr: ChannelWithInfo[]) {
     let emailHtml = '';
 
     const tableStyle = `style="border: 1px solid #333; width: 90%"`;
@@ -273,58 +229,116 @@ export default class TwitchNotifier {
     return emailHtml;
   }
 
-  /* SECONDARY FUNCTIONS ---------------------------------------------------- */
-
-  channelsToIgnoreIfTheyAreLive() {
-    const onlyValidItems = this.getLastNotifiedChannels()
-      .filter((item) => {
-        const diffMinutes = this.getMinutesDiff(this.getDatefixedByTimezone(new Date()), new Date(item[1]));
-        const minutesToCompare = this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
-        return diffMinutes < minutesToCompare;
-      })
-      .map((item) => item[0]);
-    return onlyValidItems;
+  private getUserEmail() {
+    return Session.getActiveUser().getEmail();
   }
 
-  /* MAIN FUNCTIONS --------------------------------------------------------- */
+  private sendEmail(channels: ChannelWithInfo[]) {
+    const singleChannelLive = `Twitch notifier - ${channels[0].streamName} is live`;
+    const multiChannelsLive = `Twitch notifier - ${channels.length} channels live: ${channels
+      .map((item) => item.streamName)
+      .slice(0, 5)
+      .join(', ')}`;
 
-  getChannelsInformation() {
-    const channelsWithInfoArr = this.config.twitch.channels.map((item) => item[0]).map((channel: string) => this.getTwitchStreamCompleteInfo(channel));
-    return channelsWithInfoArr;
-  }
-
-  getChannelsToNotify(channelsWithInfoArr: ChannelWithInfo[]) {
-    // (neverNotified || startedLive < 60) && isOnline && last notification > MIN_HOURS_BETWEEN_NOTIFICATION
-
-    const lastNotified = this.getAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify);
-    const lastValidNotifiedItems =
-      lastNotified === ''
-        ? []
-        : lastNotified
-            .split('\n')
-            .filter((item) => item.length > 0)
-            .map((item) => item.split(this.PROPERTY_DIVIDER)[0]);
-    const recentStartedLiveChannels = channelsWithInfoArr.filter((channelInfo) => {
-      const isChannelAlreadyNotified = lastValidNotifiedItems.includes(channelInfo.streamName);
-      const result = !isChannelAlreadyNotified ? true : channelInfo.streamLiveUptimeMinutes < 60;
-      return result;
+    const emailFunction = this.getEmailFunction();
+    emailFunction({
+      to: this.USER_EMAIL,
+      subject: channels.length === 1 ? singleChannelLive : multiChannelsLive,
+      htmlBody: this.generateEmailContent(channels)
     });
-    const onlineChannels = recentStartedLiveChannels.filter((channelInfo) => channelInfo.streamIsLive);
-    const nonIgnoreChannels = onlineChannels.filter((channelInfo) => this.channelsToIgnoreIfTheyAreLive().includes(channelInfo.streamName) === false);
-    const channelsToNotify = nonIgnoreChannels;
-    return channelsToNotify;
   }
 
-  getLastNotifiedChannels() {
-    const oldNotifications = this.getAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify);
-    const oldNotificationsArr = oldNotifications.split('\n').map((item) => item.split(this.PROPERTY_DIVIDER));
-    return oldNotificationsArr;
+  /* GOOGLE APPS SCRIPT TRIGGER FUNCTIONS =================================== */
+
+  private addAppsScriptsTrigger(functionName: string, minutesLoop: number) {
+    const scriptFunction = this.getScriptFunction();
+    const tickSyncTrigger = scriptFunction.getProjectTriggers().find((item) => item.getHandlerFunction() === functionName);
+
+    if (tickSyncTrigger) {
+      this.removeAppsScriptsTrigger(functionName);
+    }
+
+    scriptFunction.newTrigger(functionName).timeBased().everyMinutes(minutesLoop).create();
   }
 
-  updateNotifiedChannels(channelsToNotify: ChannelWithInfo[]) {
+  private removeAppsScriptsTrigger(functionName: string) {
+    const scriptFunction = this.getScriptFunction();
+    const tickSyncTrigger = scriptFunction.getProjectTriggers().find((item) => item.getHandlerFunction() === functionName);
+
+    if (tickSyncTrigger) {
+      scriptFunction.deleteTrigger(tickSyncTrigger);
+    }
+  }
+
+  /* GOOGLE APPS SCRIPT PROPERTY FUNCTIONS ================================== */
+
+  private removeAppsScriptProperty(property: string) {
+    return this.getPropertyFunction().getScriptProperties().deleteProperty(property);
+  }
+
+  private getAppsScriptProperty(property: string) {
+    return this.getPropertyFunction().getScriptProperties().getProperty(property);
+  }
+
+  private updateAppsScriptProperty(property: string, newContent: string) {
+    return this.getPropertyFunction().getScriptProperties().setProperty(property, newContent);
+  }
+
+  private addMissingProperties() {
+    if (!this.getAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify)) {
+      this.updateAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify, '');
+    }
+  }
+
+  /* TWITCH FUNCTIONS ======================================================= */
+
+  private getTwitchLink(channel: string) {
+    return `https://www.twitch.tv/${channel}`;
+  }
+
+  private async getTwitchStreamCompleteInfo(channel: string) {
+    const bodyContent = await this.getPageContent(this.getTwitchLink(channel));
+    const streamInfoData = this.extractLiveInformation(bodyContent, channel);
+    return streamInfoData;
+  }
+
+  private extractLiveInformation(htmlContent: string, channel: string) {
+    let data = htmlContent.split('<script type="application/ld+json">')[1];
+    let image = '';
+
+    if (data) {
+      image = htmlContent.split('content="https://static-cdn')[1];
+      image = 'https://static-cdn' + image.split('"')[0];
+      data = data.split('</script>')[0];
+      data = JSON.parse(data);
+      data = data[0];
+    }
+
+    const dataObject: any = data;
+    const streamLiveStartDatetime = dataObject ? this.getDatefixedByTimezone(new Date(dataObject.uploadDate)).toISOString() : '';
+    const uptime = this.getMinutesDiff(new Date(this.CURRENT_DATETIME), new Date(streamLiveStartDatetime));
+
+    const parsedData: ChannelWithInfo = {
+      streamName: channel,
+      streamLink: this.getTwitchLink(channel),
+      streamImage: image,
+      streamIsLive: dataObject?.publication.isLiveBroadcast ?? false,
+      streamLiveDescription: dataObject?.description ?? '',
+      streamLivePreviewImage: dataObject?.thumbnailUrl[2] ?? '',
+      streamLiveStartDatetime: streamLiveStartDatetime,
+      streamLiveUptimeMinutes: uptime,
+      streamLiveUptimeParsed: uptime > 60 ? `${Math.trunc(uptime / 60)} hours<br>${uptime - Math.trunc(uptime / 60) * 60} minutes` : isNaN(uptime) === false ? `${uptime} minutes` : ''
+    };
+
+    return parsedData;
+  }
+
+  /* NOTIFIED CHANNELS FUNCTIONS ============================================ */
+
+  private updateNotifiedChannels(channelsToNotify: ChannelWithInfo[]) {
     const notifiedChannels = this.getLastNotifiedChannels();
     const nonNotifiedOldChannels = notifiedChannels.filter((item) => channelsToNotify.map((item) => item.streamName).includes(item[0]) === false);
-    const newNotifiedChannels = channelsToNotify.map((item) => [item.streamName, this.CURRENT_DATETIME]);
+    const newNotifiedChannels: NotifiedTwitchStream[] = channelsToNotify.map((item) => [item.streamName, this.CURRENT_DATETIME]);
     const newPropertyStr = [...nonNotifiedOldChannels, ...newNotifiedChannels]
       .map((item) => item.join(this.PROPERTY_DIVIDER))
       .filter((row) => row.length > 0)
@@ -333,24 +347,113 @@ export default class TwitchNotifier {
     this.updateAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify, newPropertyStr);
   }
 
-  showNextChannelsToNotify(channelsWithInfo: ChannelWithInfo[]) {
+  private showNextChannelsToNotify(channelsWithInfo: ChannelWithInfo[]) {
     const channels = channelsWithInfo.map((item) => [item.streamName, item.streamIsLive, item.streamLiveUptimeMinutes]).sort((a, b) => Number(b[1]) - Number(a[1]));
     const maxStringLength = Math.max(...channels.map((item) => item[0].toString().length));
     const parsedChannels = channels.map((item) => `${item[0]}${' '.repeat(maxStringLength - item[0].toString().length)} - ${item[1] ? 'online ' : 'offline'}${isNaN(Number(item[2])) ? '' : ' - ' + Number(Number(item[2]) / 60).toFixed(2) + ' hours'}`).join('\n');
     return parsedChannels;
   }
 
-  sendEmail(channels: ChannelWithInfo[]) {
-    const singleChannelLive = `Twitch notifier - ${channels[0].streamName} is live`;
-    const multiChannelsLive = `Twitch notifier - ${channels.length} channels live: ${channels
-      .map((item) => item.streamName)
-      .slice(0, 5)
-      .join(', ')}`;
+  private getLastNotifiedChannels() {
+    if (this.ENVIRONMENT !== 'google_apps_script') {
+      return [] as NotifiedTwitchStream[];
+    }
 
-    MailApp.sendEmail({
-      to: this.USER_EMAIL,
-      subject: channels.length === 1 ? singleChannelLive : multiChannelsLive,
-      htmlBody: this.generateEmailContent(channels)
+    const oldNotifications = this.getAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify);
+    const oldNotificationsArr = oldNotifications
+      .split('\n')
+      .filter((item) => item.length > 0)
+      .map((item) => item.split(this.PROPERTY_DIVIDER)) as NotifiedTwitchStream[];
+    return oldNotificationsArr;
+  }
+
+  /* SECONDARY FUNCTIONS ==================================================== */
+
+  filterStreamersToNotify(channelsWithInfoArr: ChannelWithInfo[]) {
+    // (neverNotified || startedLive < 60) && isOnline && last notification > MIN_HOURS_BETWEEN_NOTIFICATION
+    let channelsToNotify: ChannelWithInfo[] = [];
+
+    const lastNotified = this.getLastNotifiedChannels();
+
+    // filter only streams that are live
+    channelsToNotify = channelsWithInfoArr.filter((channelInfo) => channelInfo.streamIsLive);
+
+    // filter only streams that dont contain any global ignored words
+    channelsToNotify = channelsToNotify.filter((channelInfo) => this.config.twitch.ignoredWords.map((igWord) => igWord.toLowerCase()).every((word) => channelInfo.streamLiveDescription.toLowerCase().search(word) === -1));
+
+    // filter only streams that dont contain any specific ignored words
+    channelsToNotify = channelsToNotify.filter((channelInfo) => {
+      const currentStream = this.config.twitch.channels.find((channel) => channel[0] === channelInfo.streamName);
+      return !currentStream[1].ignoredWords ? true : currentStream[1].ignoredWords.map((igWord) => igWord.toLowerCase()).every((word) => channelInfo.streamLiveDescription.toLowerCase().search(word) === -1);
     });
+
+    // filter only streams that contain at least one specific searched words
+    channelsToNotify = channelsToNotify.filter((channelInfo) => {
+      const currentStream = this.config.twitch.channels.find((channel) => channel[0] === channelInfo.streamName);
+      return !currentStream[1].searchedWords ? true : currentStream[1].searchedWords.map((searchedWord) => searchedWord.toLowerCase()).some((word) => channelInfo.streamLiveDescription.toLowerCase().search(word) > -1);
+    });
+
+    // filter streams that were (a) were not notified yet or start at maximum 60 minutes ago
+    channelsToNotify = channelsToNotify.filter((channelInfo) => {
+      const isChannelAlreadyNotified = lastNotified.map((item) => item[0]).includes(channelInfo.streamName);
+      const result = !isChannelAlreadyNotified ? true : channelInfo.streamLiveUptimeMinutes < 60;
+      return result;
+    });
+
+    // filter items that not have been notified in the last two hours
+    channelsToNotify = channelsToNotify.filter((channelInfo) => {
+      const onlyValidItems = lastNotified
+        .filter((item) => {
+          const diffMinutes = this.getMinutesDiff(this.getDatefixedByTimezone(new Date()), new Date(item[1]));
+          const minutesToCompare = this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
+          return diffMinutes < minutesToCompare;
+        })
+        .map((item) => item[0]);
+      return onlyValidItems.includes(channelInfo.streamName) === false;
+    });
+
+    return channelsToNotify;
+  }
+
+  /* MAIN FUNCTIONS ========================================================= */
+
+  async getTwichStreamersData() {
+    const channelsWithInfoArr = await Promise.all(
+      this.config.twitch.channels
+        .map((item) => item[0])
+        .map(async (channel: string) => {
+          return await this.getTwitchStreamCompleteInfo(channel);
+        })
+    );
+
+    return channelsWithInfoArr;
+  }
+
+  async check() {
+    this.addMissingProperties();
+
+    const channelsInfo = await this.getTwichStreamersData();
+    const channelsToNotify = this.filterStreamersToNotify(channelsInfo);
+
+    if (channelsToNotify.length > 0) {
+      this.sendEmail(channelsToNotify);
+      this.updateNotifiedChannels(channelsToNotify);
+      this.logger(`notified about ${channelsToNotify.length} live streamers`);
+    } else {
+      this.logger('no streamers went live recently');
+      this.logger(this.showNextChannelsToNotify(channelsInfo));
+    }
+  }
+
+  setup() {
+    this.logger('installed looping');
+    this.addAppsScriptsTrigger(this.config.settings.checkFunction, this.config.settings.minutesBetweenChecks);
+    this.addMissingProperties();
+  }
+
+  uninstall() {
+    this.logger('uninstalled looping');
+    this.removeAppsScriptsTrigger(this.config.settings.checkFunction);
+    this.removeAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify);
   }
 }
