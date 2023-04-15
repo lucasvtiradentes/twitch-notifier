@@ -266,13 +266,17 @@ export default class TwitchNotifier {
 
     if (tickSyncTrigger) {
       scriptFunction.deleteTrigger(tickSyncTrigger);
+      return true;
     }
   }
 
   /* GOOGLE APPS SCRIPT PROPERTY FUNCTIONS ================================== */
 
   private removeAppsScriptProperty(property: string) {
-    return this.getPropertyFunction().getScriptProperties().deleteProperty(property);
+    if (this.getAppsScriptProperty(property)) {
+      this.getPropertyFunction().getScriptProperties().deleteProperty(property);
+      return true;
+    }
   }
 
   private getAppsScriptProperty(property: string) {
@@ -452,14 +456,16 @@ export default class TwitchNotifier {
   }
 
   setup() {
-    this.logger('installed looping');
     this.addAppsScriptsTrigger(this.config.settings.checkFunction, this.config.settings.minutesBetweenChecks);
     this.addMissingProperties();
+    this.logger('installed looping');
   }
 
   uninstall() {
-    this.logger('uninstalled looping');
-    this.removeAppsScriptsTrigger(this.config.settings.checkFunction);
     this.removeAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify);
+    const haveRemoveTrigger = this.removeAppsScriptsTrigger(this.config.settings.checkFunction);
+    if (haveRemoveTrigger) {
+      this.logger('uninstalled looping');
+    }
   }
 }

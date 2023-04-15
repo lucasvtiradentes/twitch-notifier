@@ -20,12 +20,15 @@ import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 
   const VERSION = JSON.parse(readFileSync(FILES.package, { encoding: 'utf8' })).version;
 
-  writeFileSync(FILES.gasSetup, getGasSetupFileContent(VERSION));
-  writeFileSync(FILES.gasAppsScript, getAppsScriptAllowPermissionFileContent());
+  const setupGasFileContent = getGasSetupFileContent(VERSION);
+  const allowGasPermissionFileContent = getAppsScriptAllowPermissionFileContent();
+
+  writeFileSync(FILES.gasSetup, setupGasFileContent);
+  writeFileSync(FILES.gasAppsScript, allowGasPermissionFileContent);
 
   const readmeFile = new DynMarkdown(FILES.readme);
-  readmeFile.updateField(README_FILES.gasSetupContent, readFileSync(FILES.gasSetup, { encoding: 'utf-8' }));
-  readmeFile.updateField(README_FILES.gasAppsScriptContent, readFileSync(FILES.gasAppsScript, { encoding: 'utf-8' }));
+  readmeFile.updateField(README_FILES.gasSetupContent, `\n<pre>${setupGasFileContent}</pre>\n`);
+  readmeFile.updateField(README_FILES.gasAppsScriptContent, `\n<pre>${allowGasPermissionFileContent}</pre>\n`);
   readmeFile.saveFile();
 
   const VERSION_UPDATE = `// version`;

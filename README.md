@@ -96,7 +96,7 @@ It basically sets a function to run in [google apps scripts](https://www.google.
 
 - visit each of your favorite streamers twitch link and store the information;
 - fitler all the data to only remain the ones you should be notified about, considering your specified options;
-- if there's at least one stream to notify you about, send an emain containing the details.
+- if there's at least one stream to notify you about, send an email containing the details.
 
 ### Installation
 
@@ -124,9 +124,9 @@ To effectively use this project, do the following steps:
        Remember to update the <code>CONFIGS</code> object according to your data and needs.</p>
     </blockquote>
 
-<pre>
 <!-- <DYNFIELD:GAS_SETUP> -->
-const CONFIGS = {
+
+<pre>const CONFIGS = {
   twitch: {
     channels: [
       ['razah', {}],
@@ -166,9 +166,9 @@ function setup() {
 function uninstall() {
   const twitchNotifier = getTwitchNotifier();
   twitchNotifier.uninstall();
-}
+}</pre>
+
 <!-- </DYNFIELD:GAS_SETUP> -->
-</pre>
   </div>
 </details>
 
@@ -190,9 +190,9 @@ function uninstall() {
       </table>
     </div>
     <p>Go back to the project files, and replace the content present in the <code>appsscript.json</code> with the following code:</p>    <p align="center"><img width="500" src="./.github/images/tutorial/tut5.png" /></p>
-    <pre>
 <!-- <DYNFIELD:GAS_APPSSCRIPT> -->
-{
+
+<pre>{
   "timeZone": "Etc/GMT",
   "dependencies": {},
   "oauthScopes": [
@@ -203,9 +203,9 @@ function uninstall() {
   ],
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"
-}
+}</pre>
+
 <!-- </DYNFIELD:GAS_APPSSCRIPT> -->
-</pre>
   </div>
 </details>
 
@@ -234,6 +234,8 @@ function getTwitchNotifier(){
 </pre>
 
 So if your instance is running at version "1.0.0" and the latest is "3.6.1", just replace those numbers in the `version` variable.
+
+It is a good practice to go to the [dist folder](./dist/) everytime you update your instance to check if your files in GAS have same properties as the new version; if they're not this may cause errors.
 
 ### Uninstall
 
