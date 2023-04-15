@@ -38,4 +38,4 @@ jobs:
     - name: 6 - deploy package to npm
       continue-on-error: true
       if: ${{ github.ref == 'refs/heads/master' }}
-      run: echo HUSKY=0 npm run pub
+      run: HUSKY=0 npm run pub
