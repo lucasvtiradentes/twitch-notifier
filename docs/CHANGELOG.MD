@@ -1,5 +1,13 @@
 # CHANGELOG HISTORY
 
+## [1.1.0](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.0.1...v1.1.0) (2023-04-15)
+
+
+### ✨ feature:
+
+* add ignored hours filtering ([#4](https://github.com/lucasvtiradentes/twitch-notifier/issues/4)) ([8d8cf86](https://github.com/lucasvtiradentes/twitch-notifier/commit/8d8cf86097247aa56bad97220f935637d10c99f4))
+* add live title filtering ([#3](https://github.com/lucasvtiradentes/twitch-notifier/issues/3)) ([6fa5a98](https://github.com/lucasvtiradentes/twitch-notifier/commit/6fa5a98b1cabea59964681b63245e8fec054e9aa))
+
 ## [1.0.1](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.0.0...v1.0.1) (2023-04-15)
 
 ## 1.0.0 (2023-04-15)

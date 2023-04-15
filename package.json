@@ -1,7 +1,7 @@
 {
   "name": "twitch-notifier",
   "description": "🔔 get email notifications whenever your favorite twitch streamers go live.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "keywords": [
     "twitch",
     "notify",
