@@ -41,10 +41,9 @@ export default class TwitchNotifier {
   private APPNAME = 'twitch-notifier';
   private GITHUB_REPOSITORY = 'lucasvtiradentes/twitch-notifier';
   private ENVIRONMENT = this.detectEnvironment();
-  private TODAY_DATE = '';
   private CURRENT_DATETIME = this.getDatefixedByTimezone(new Date()).toISOString();
   private SESSION_LOGS = [];
-  private USER_EMAIL = this.ENVIRONMENT === 'google_apps_script' ? this.getUserEmail() : '';
+  private USER_EMAIL = this.getUserEmail();
   private PROPERTY_DIVIDER = ` | `;
   private MIN_HOURS_BETWEEN_NOTIFICATIONS: 2;
   private APPS_SCRIPTS_PROPERTIES = {
@@ -59,7 +58,6 @@ export default class TwitchNotifier {
   constructor(private config: Config) {
     this.validateConfigs(config);
     this.config = config;
-    this.TODAY_DATE = this.getDateFixedByTimezone(this.config.settings.timeZoneCorrection).toISOString().split('T')[0];
     this.logger(`${this.APPNAME} is running at version ${this.VERSION} in ${this.ENVIRONMENT} environment`);
     this.logger(`check the docs for your version here: ${`https://github.com/${this.GITHUB_REPOSITORY}/tree/v${this.VERSION}#readme`}`);
   }
@@ -230,7 +228,7 @@ export default class TwitchNotifier {
   }
 
   private getUserEmail() {
-    return Session.getActiveUser().getEmail();
+    return this.ENVIRONMENT === 'google_apps_script' ? Session.getActiveUser().getEmail() : '';
   }
 
   private sendEmail(channels: ChannelWithInfo[]) {
@@ -430,6 +428,13 @@ export default class TwitchNotifier {
   }
 
   async check() {
+    const currentHour = Number(this.CURRENT_DATETIME.split('T')[1].split(':')[0]);
+    console.log(currentHour);
+
+    if (this.config.settings.disabledHours.includes(currentHour)) {
+      this.logger(`skipping run since it [${currentHour}] is a disable hour`);
+      return;
+    }
     this.addMissingProperties();
 
     const channelsInfo = await this.getTwichStreamersData();

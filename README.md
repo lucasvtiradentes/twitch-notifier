@@ -129,18 +129,18 @@ To effectively use this project, do the following steps:
 const CONFIGS = {
   twitch: {
     channels: [
-      ['razah', { searchedWords: ['LCQ'] }],
+      ['razah', {}],
       ['gaules', {}],
-      ['mch_agg', {}],
-      ['brnwowzk1', {}]
+      ['mch_agg', { searchedWords: ['live'] }],  // specific searched words | you only will be notified if the current stream title contain at least one of these words
+      ['brnwowzk1', { ignoredWords: ['rr'] }]    // specific ignored words | if a the current stream title contains any of these words, you will not be notified about it
     ],
-    ignoredWords: ['rerun']
+    ignoredWords: ['rerun']                      // globaly ignored words | if a stream title contains any of these words, you will not be notified about it
   },
   settings: {
-    disabledHours: [0, 1, 2, 3, 4, 5],
-    timeZoneCorrection: -3,
-    minutesBetweenChecks: 10,
-    checkFunction: 'checkLiveStreams'
+    disabledHours: [0, 1, 2, 3, 4, 5],           // skiped hours that twitch-notifier will not notify you about your streamers
+    timeZoneCorrection: -3,                      // hour difference between your timezone and UTC/GMT timezone | https://www.utctime.net/
+    minutesBetweenChecks: 10,                    // delay time between every check
+    checkFunction: 'checkLiveStreams'            // development option, dont change
   }
 };
 
@@ -159,7 +159,7 @@ function checkLiveStreams() {
 
 function setup() {
   const twitchNotifier = getTwitchNotifier();
-  twitchNotifier.install();
+  twitchNotifier.setup();
 }
 
 function uninstall() {
@@ -193,15 +193,7 @@ function uninstall() {
 <!-- <DYNFIELD:GAS_APPSSCRIPT> -->
 {
   "timeZone": "Etc/GMT",
-  "dependencies": {
-    "enabledAdvancedServices": [
-      {
-        "userSymbol": "Calendar",
-        "serviceId": "calendar",
-        "version": "v3"
-      }
-    ]
-  },
+  "dependencies": {},
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.scriptapp",
     "https://www.googleapis.com/auth/script.external_request",
@@ -355,7 +347,7 @@ This project uses the following thechnologies:
 
 ## Related
 
-- [x] [esports-notifier](https://github.com/lucasvtiradentes/esports-notifier): Receive a daily email informing whenever at least one of your favorite esports teams has a match on the current date;
+- [x] [esports-notifier](https://github.com/lucasvtiradentes/esports-notifier): receive a daily email informing whenever at least one of your favorite esports teams has a match on the current date;
 - [x] [gcal-sync](https://github.com/lucasvtiradentes/gcal-sync): sync your github commits and ticktick tasks to your google calendar and track your work effortlessly;
 - [x] [GAS docs](https://developers.google.com/apps-script/reference/script/clock-trigger-builder?hl=pt-br): documentation related to triggering functions in Google Apps script.
 

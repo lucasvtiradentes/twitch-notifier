@@ -5,6 +5,5 @@ const twitchNotifier = new TwitchNotifier(configs);
 
 twitchNotifier.getTwichStreamersData().then((data) => {
   const filtered = twitchNotifier.filterStreamersToNotify(data);
-  console.log(data);
-  console.log(data.length, filtered.length);
+  console.log(`there are ${filtered.length} out of ${data.length} streams to notify`);
 });

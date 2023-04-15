@@ -1,14 +1,6 @@
 {
   "timeZone": "Etc/GMT",
-  "dependencies": {
-    "enabledAdvancedServices": [
-      {
-        "userSymbol": "Calendar",
-        "serviceId": "calendar",
-        "version": "v3"
-      }
-    ]
-  },
+  "dependencies": {},
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.scriptapp",
     "https://www.googleapis.com/auth/script.external_request",

@@ -59,15 +59,7 @@ async function minifyFile(filePath: string, outFile: string) {
 function getAppsScriptAllowPermissionFileContent() {
   const appsScript = `{
   "timeZone": "Etc/GMT",
-  "dependencies": {
-    "enabledAdvancedServices": [
-      {
-        "userSymbol": "Calendar",
-        "serviceId": "calendar",
-        "version": "v3"
-      }
-    ]
-  },
+  "dependencies": {},
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.scriptapp",
     "https://www.googleapis.com/auth/script.external_request",
@@ -104,7 +96,7 @@ function checkLiveStreams() {
 
 function setup() {
   const twitchNotifier = getTwitchNotifier();
-  twitchNotifier.install();
+  twitchNotifier.setup();
 }
 
 function uninstall() {
