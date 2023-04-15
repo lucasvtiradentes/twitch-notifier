@@ -21,8 +21,7 @@
   <summary align="center"><span>see <b>table of content</b></span></summary>
   <p align="center">
     <ul>
-      <!-- <li><a href="#trumpet-overview">Overview</a></li> -->
-      <!-- <li><a href="#pushpin-table-of-contents">TOC</a></li> -->
+      <li><a href="#trumpet-overview">Overview</a></li>
       <li><a href="#dart-features">Features</a></li>
       <li><a href="#warning-requirements">Requirements</a></li>
       <li>
