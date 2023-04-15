@@ -5,13 +5,16 @@
 </h3>
 
 <div align="center">
-  <a href="https://nodejs.org/en/"><img src="https://img.shields.io/badge/made%20with-javascript-1f425f?logo=javascript&.svg" /></a>
+  <a href="https://nodejs.org/en/"><img src="https://img.shields.io/badge/made%20with-node-1f425f?logo=node.js&.svg" /></a>
   <a href="https://www.google.com/script/start/"><img src="https://img.shields.io/badge/apps%20script-4285F4?logo=google&logoColor=white" /></a>
   <a href="https://github.com/lucasvtiradentes/twitch-notifier#contributing"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contributions" /></a>
+  <br>
+  <a href="https://www.npmjs.com/package/twitch-notifier"><img src="https://img.shields.io/npm/v/twitch-notifier.svg?style=flat" alt="npm version"></a>
+  <a href="https://github.com/lucasvtiradentes/twitch-notifier/actions/workflows/ci-cd.yml"><img src="https://github.com/lucasvtiradentes/twitch-notifier/workflows/CI/badge.svg"/></a>
 </div>
 
 <p align="center">
-  <a href="#dart-features">Features</a> • <a href="#warning-requirements">Requirements</a> • <a href="#bulb-usage">Usage</a> • <a href="#books-about">About</a>
+  <a href="#dart-features">Features</a> • <a href="#warning-requirements">Requirements</a> • <a href="#bulb-usage">Usage</a> • <a href="#wrench-development">Development</a>  • <a href="#books-about">About</a>
 </p>
 
 <details>
@@ -25,14 +28,24 @@
       <li>
         <a href="#bulb-usage">Usage</a>
         <ul>
+          <li><a href="#how-it-works">How it works?</a></li>
           <li><a href="#installation">Installation</a></li>
+          <li><a href="#updating">Updating</a></li>
+          <li><a href="#uninstall">Uninstall</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#wrench-development">Development</a>
+        <ul>
+          <li><a href="#development-setup">Development setup</a></li>
+          <li><a href="#used-technologies">Used technologies</a></li>
         </ul>
       </li>
       <li>
         <a href="#books-about">About</a>
         <ul>
+          <li><a href="#related">Related</a></li>
           <li><a href="#license">License</a></li>
-          <li><a href="#contributing">Contributing</a></li>
           <li><a href="#feedback">Feedback</a></li>
         </ul>
       </li>
@@ -44,24 +57,47 @@
 
 ## :trumpet: Overview
 
-A simple way to get email notifications whenever your favorite twitch streamers go live.
+Receive an **email** informing whenever your **favorite twitch streamers go live**.
+
+I developed this solution because I find twitch way to [handle notifications](https://www.twitch.tv/settings/notifications) are not so optimized when you follow a lot of streamers, since you have to disable all the ones you don't want to receive notifications, rather than select only the streamers you want to get notified about.
 
 <div align="center">
-<img src="./.github/images/demo.webp" width="80%" >
+  <table align="center">
+    <thead>
+      <tr>
+        <td><p align="center">Desktop view</p></td>
+        <td><p align="center">Mobile view</p></td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><img width="100%" src="./.github/images/desktop.webp"></td>
+        <td><img width="200px" src="./.github/images/mobile.jpeg"></td>
+      </tr>
+    </tbody>
+ </table>
 </div>
 
-Why? because twitch mobile app notifications are overwhelming, so I disabled then all and prefer receiving only alerts about my favorite streamers ([razah](https://www.twitch.tv/razah) and [theprimeagen](https://www.twitch.tv/theprimeagen)) through email ;)
+So this tool allows me to disable all twitch notifications and get notified when my favorite streamers ([razah](https://www.twitch.tv/razah) and [theprimeagen](https://www.twitch.tv/theprimeagen)) go live.
 
 ## :dart: Features<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
-&nbsp;&nbsp;&nbsp;✔️ send notifications whenever your favorite streamers go live;<br>
-&nbsp;&nbsp;&nbsp;✔️ choose the minimum hour difference from the last notification;<br>
+&nbsp;&nbsp;&nbsp;✔️ receive email informing whenever your favorite streamers go live;<br>
+&nbsp;&nbsp;&nbsp;✔️ set custom filtering words to ignore or to consider: you can skip email notification when the live title contains the word 'rerun', for instance.<br>
 
 ## :warning: Requirements<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
-The only thing you need to use this solution is a `gmail/google account`.
+The only thing you need to use this project is a `gmail/google account`.
 
 ## :bulb: Usage<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
+
+### How it works
+
+It basically sets a function to run in [google apps scripts](https://www.google.com/script/start/) to run everyday at a specified time, and this function is responsable for:
+
+- visit each of your favorite streamers twitch link and store the information;
+- fitler all the data to only remain the ones you should be notified about, considering your specified options;
+- if there's at least one stream to notify you about, send an emain containing the details.
 
 ### Installation
 
@@ -71,23 +107,68 @@ To effectively use this project, do the following steps:
   <summary>1 - create a Google Apps Scripts (GAS) project</summary>
   <div>
     <br>
-    <p>Go to the <a href="">google apps script</a> and create a new project by clicking in the button showed in the next image.<br>
+    <p>Go to the <a href="https://www.google.com/script/start/">google apps script</a> and create a new project by clicking in the button showed in the next image.<br>
     It would be a good idea to rename the project to something like "twitch-notifier".</p>
     <p align="center"><img width="500" src="./.github/images/tutorial/tut2.png" /></p>
   </div>
 </details>
 
 <details>
-  <summary>2 - setup the twitch-notifier on GAS</summary>
+  <summary>2 - setup the twitch-notifier code on GAS</summary>
   <div>
     <br>
     <p>Click on the initial file, which is the <b>rectangle-1</b> on the image.</p>
     <p align="center"><img width="500" src="./.github/images/tutorial/tut3.png" /></p>
-    <p>Replace the initial content present in the <b>rectangle-2</b> with the content present in <a href="./src/notifier.js">notifier.js</a>.</p>
+    <p>Replace the initial content present in the <b>rectangle-2</b> with the content present in code bellow.</p>
     <blockquote>
       <p><span>⚠️ Warning</span><br>
        Remember to update the <code>CONFIGS</code> object according to your data and needs.</p>
     </blockquote>
+
+<pre>
+<!-- <DYNFIELD:GAS_SETUP> -->
+const CONFIGS = {
+  twitch: {
+    channels: [
+      ['razah', {}],
+      ['gaules', {}],
+      ['mch_agg', {}],
+      ['brnwowzk1', {}]
+    ],
+    disabledHours: [],
+    ignoredWords: []
+  },
+  settings: {
+    timeZoneCorrection: -3,
+    minutesBetweenChecks: 10,
+    checkFunction: 'checkLiveStreams'
+  }
+};
+
+function getTwitchNotifier(){
+  const version = "0.0.1"
+  const content = UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText();
+  eval(content)
+  const twitchNotifier = new TwitchNotifier(CONFIGS)
+  return twitchNotifier;
+}
+
+function checkLiveStreams() {
+  const twitchNotifier = getTwitchNotifier();
+  twitchNotifier.check();
+}
+
+function setup() {
+  const twitchNotifier = getTwitchNotifier();
+  twitchNotifier.install();
+}
+
+function uninstall() {
+  const twitchNotifier = getTwitchNotifier();
+  twitchNotifier.uninstall();
+}
+<!-- </DYNFIELD:GAS_SETUP> -->
+</pre>
   </div>
 </details>
 
@@ -99,17 +180,18 @@ To effectively use this project, do the following steps:
     <div align="center">
       <table>
         <tr>
-          <td width="400">
-            <img width="400" src="./.github/images/tutorial/tut4.1.png" />
+          <td align="center">
+            <img height="300px" src="./.github/images/tutorial/tut4.1.png" />
           </td>
-          <td width="400">
-            <img width="400" src="./.github/images/tutorial/tut4.2.png" />
+          <td align="center">
+            <img width="300px" src="./.github/images/tutorial/tut4.2.png" />
           </td>
         </tr>
       </table>
     </div>
     <p>Go back to the project files, and replace the content present in the <code>appsscript.json</code> with the following code:</p>    <p align="center"><img width="500" src="./.github/images/tutorial/tut5.png" /></p>
     <pre>
+<!-- <DYNFIELD:GAS_APPSSCRIPT> -->
 {
   "timeZone": "Etc/GMT",
   "dependencies": {
@@ -129,7 +211,9 @@ To effectively use this project, do the following steps:
   ],
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"
-}</pre>
+}
+<!-- </DYNFIELD:GAS_APPSSCRIPT> -->
+</pre>
   </div>
 </details>
 
@@ -143,34 +227,146 @@ To effectively use this project, do the following steps:
   </div>
 </details>
 
+### Updating
+
+To update your twitch-notifier instance and use the latest features, you just need to change the `version` number in the `getTwitchNotifier` function, as it is shown bellow:
+
+<pre>
+function getTwitchNotifier(){
+  const version = "1.0.0" // update here to use the latest features
+  const content = UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText();
+  eval(content)
+  const twitchNotifier = new TwitchNotifier(CONFIGS)
+  return twitchNotifier;
+}
+</pre>
+
+So if your instance is running at version "1.0.0" and the latest is "3.6.1", just replace those numbers in the `version` variable.
+
+### Uninstall
+
+If you want to receive the daily emails, just go to the GAS respective project in the header dropdown menu select the `uninstall` function and then click on the `Run` button. By doing that, the GAS trigger responsable for running everyday the function will be deleted.
+
 <a href="#"><img src="./.github/images/divider.png" /></a>
 
+## :wrench: Development<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
+
+### Development setup
+
+<details>
+  <summary align="center">Instructions for development setup</summary>
+  <div>
+<br>
+To setup this project in your computer, run the following commands:
+
+```bash
+# Clone this repository
+$ git clone https://github.com/lucasvtiradentes/twitch-notifier
+
+# Go into the repository
+$ cd twitch-notifier
+
+# Install dependencies
+$ npm install
+```
+
+If you want to [contribute](./docs/CONTRIBUTING.md) to the project, fork the project, make the necessary changes, and to test your work you can load your version in apps scripts with almost no effort do this: replace the content of the <code>getTwitchNotifier</code> function with the following code:
+
+```js
+function getTwitchNotifier() {
+  // const version = "0.0.1" // version
+  // const content = getTwitchNotifierProduction(version)
+  const content = getTwitchNotifierDevelopment('yourgithub/project-fork', 'develop');
+  eval(content);
+  const twitchNotifier = new TwitchNotifier(CONFIGS);
+  return twitchNotifier;
+}
+
+function getTwitchNotifierProduction(version) {
+  return UrlFetchApp.fetch(`https://cdn.jsdelivr.net/npm/twitch-notifier@${version}`).getContentText();
+}
+
+function getTwitchNotifierDevelopment(repository, branch) {
+  const filePath = 'dist/TwitchNotifier.min.js';
+  const final_link = `https://api.github.com/repos/${repository}/contents/${filePath}${branch ? `?ref=${branch}` : ''}`;
+  const response = UrlFetchApp.fetch(final_link, { method: 'get', contentType: 'application/json' });
+  const base64Content = JSON.parse(response.toString()).content;
+  const decodedArr = Utilities.base64Decode(base64Content);
+  const decodedAsString = Utilities.newBlob(decodedArr).getDataAsString();
+  return decodedAsString;
+}
+```
+
+This will allow you to select the **twitch-notifier** source place (github repository or npm package) and specify the intended version.
+
+  </div>
+</details>
+
+### Used technologies
+
+This project uses the following thechnologies:
+
+<div align="center">
+  <table>
+    <tr>
+      <th>Scope</th>
+      <th>Subject</th>
+      <th>Technologies</th>
+    </tr>
+    <tr>
+      <td rowspan="1">Project</td>
+      <td>Main</td>
+      <td align="center">
+        <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white"></a>
+        <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white"></a>
+      </td>
+    </tr>
+    <tr>
+      <td rowspan="3">Setup</td>
+      <td>Code linting</td>
+      <td align="center">
+        <a href="https://github.com/prettier/prettier"><img src="https://img.shields.io/badge/prettier-1A2C34?logo=prettier&logoColor=F7BA3E"></a>
+        <a href="https://github.com/eslint/eslint"><img src="https://img.shields.io/badge/eslint-3A33D1?logo=eslint&logoColor=white"></a>
+      </td>
+    </tr>
+    <tr>
+      <!-- <td rowspan="2">Setup</td> -->
+      <td>Commit linting</td>
+      <td align="center">
+      <a target="_blank" href="https://github.com/conventional-changelog/commitlint"><img src="https://img.shields.io/badge/commitlint-red?logo=commitlint&logoColor=white"></a>
+      <a target="_blank" href="https://github.com/commitizen/cz-cli"><img src="https://img.shields.io/badge/commitizen-pink?logo=conventionalcommits&logoColor=white"></a>
+      <a href="https://gitmoji.dev"><img
+    src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square"
+    alt="Gitmoji"/></a>
+      </td>
+    </tr>
+    <tr>
+      <!-- <td rowspan="2">Setup</td> -->
+      <td>Other</td>
+      <td align="center">
+        <a href="https://editorconfig.org/"><img src="https://img.shields.io/badge/Editor%20Config-E0EFEF?logo=editorconfig&logoColor=000"></a>
+        <a target="_blank" href="https://github.com/typicode/husky"><img src="https://img.shields.io/badge/🐶%20husky-green?logo=husky&logoColor=white"></a>
+        <a target="_blank" href="https://github.com/okonet/lint-staged"><img src="https://img.shields.io/badge/🚫%20lint%20staged-yellow?&logoColor=white"></a>
+      </td>
+    </tr>
+  </table>
+</div>
+
 ## :books: About<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
+
+## Related
+
+- [x] [esports-notifier](https://github.com/lucasvtiradentes/esports-notifier): Receive a daily email informing whenever at least one of your favorite esports teams has a match on the current date;
+- [x] [gcal-sync](https://github.com/lucasvtiradentes/gcal-sync): sync your github commits and ticktick tasks to your google calendar and track your work effortlessly;
+- [x] [GAS docs](https://developers.google.com/apps-script/reference/script/clock-trigger-builder?hl=pt-br): documentation related to triggering functions in Google Apps script.
 
 ## License
 
 This project is distributed under the terms of the MIT License Version 2.0. A complete version of the license is available in the [LICENSE](LICENSE) file in this repository. Any contribution made to this project will be licensed under the MIT License Version 2.0.
 
-## Contributing
-
-If you are a typescript developer, we would kind and happy accept your help:
-
-- The best way to get started is to select any issue from the [`good-first-issue`](https://github.com/lucasvtiradentes/twitch-notifier/issues) label;
-- If you would like to contribute, please review our [Contributing guide](docs/CONTRIBUTING.md) for all relevant details.
-
-Another ways to positivily impact this project is to:
-
-- **:star: Star this repository**: my goal is to impact the maximum number of developers around the world;
-- ✍️ **Fix english mistakes** I might have made in this project, may it be in the DOCS or even in the code (I'm a portuguese natural speaker);
-- [:heart: Say thanks](https://saythanks.io/to/lucasvtiradentes): kind words have a huge impact in anyone's life;
-- [💰 Donate](https://github.com/sponsors/lucasvtiradentes): if you want to support my work even more, consider make a small donation. I would be really happy!
-
 ## Feedback
 
-Any questions or suggestions? You are welcome to discuss it on:
-
-- [Github issues](https://github.com/lucasvtiradentes/twitch-notifier/issues)
-- [Email](mailto:lucasvtiradentes@gmail.com)
+If you have any questions or suggestions you are welcome to discuss it on [github issues](https://github.com/lucasvtiradentes/twitch-notifier/issues) or, if you prefer, you can reach me in my social media provided bellow.
 
 <a href="#"><img src="./.github/images/divider.png" /></a>
 
