@@ -9,6 +9,7 @@ type Config = {
   twitch: {
     channels: ChannelRow[];
     ignoredWords: string[];
+    maximumUptimeMinutes: number;
   };
   settings: {
     timeZoneCorrection: number;
@@ -72,7 +73,7 @@ export default class TwitchNotifier {
     // prettier-ignore
     const validationArr = [
       { objToCheck: config, requiredKeys: ['twitch', 'settings'], name: 'configs' },
-      { objToCheck: config.twitch, requiredKeys: ['channels', 'ignoredWords', ], name: 'configs.twitch' },
+      { objToCheck: config.twitch, requiredKeys: ['channels', 'ignoredWords', 'maximumUptimeMinutes'], name: 'configs.twitch' },
       { objToCheck: config.settings, requiredKeys: ['timeZoneCorrection', 'disabledHours', 'checkFunction', 'minutesBetweenChecks'], name: 'configs.settings' },
     ];
 
@@ -394,11 +395,12 @@ export default class TwitchNotifier {
     // filter streams that were (a) were not notified yet or start at maximum 60 minutes ago
     channelsToNotify = channelsToNotify.filter((channelInfo) => {
       const isChannelAlreadyNotified = lastNotified.map((item) => item[0]).includes(channelInfo.streamName);
-      const result = !isChannelAlreadyNotified ? true : channelInfo.streamLiveUptimeMinutes < 60;
+      const result = !isChannelAlreadyNotified ? true : channelInfo.streamLiveUptimeMinutes < this.config.twitch.maximumUptimeMinutes;
       return result;
     });
 
     // filter items that not have been notified in the last two hours
+    // this prevents receiving a lot of emails in case the stream keeps restarting
     channelsToNotify = channelsToNotify.filter((channelInfo) => {
       const onlyValidItems = lastNotified
         .filter((item) => {
@@ -429,7 +431,6 @@ export default class TwitchNotifier {
 
   async check() {
     const currentHour = Number(this.CURRENT_DATETIME.split('T')[1].split(':')[0]);
-    console.log(currentHour);
 
     if (this.config.settings.disabledHours.includes(currentHour)) {
       this.logger(`skipping run since it [${currentHour}] is a disable hour`);
