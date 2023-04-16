@@ -37,16 +37,18 @@ type ChannelWithInfo = {
   streamLiveUptimeParsed: string;
 };
 
+type ChannelWithInfoWithReason = ChannelWithInfo & { reasonToNotNotify: string[] };
+
 export default class TwitchNotifier {
   private VERSION = ''; // version
   private APPNAME = 'twitch-notifier';
   private GITHUB_REPOSITORY = 'lucasvtiradentes/twitch-notifier';
   private ENVIRONMENT = this.detectEnvironment();
-  private CURRENT_DATETIME = this.getDatefixedByTimezone(new Date()).toISOString();
+  private CURRENT_DATETIME = '';
   private SESSION_LOGS = [];
   private USER_EMAIL = this.getUserEmail();
   private PROPERTY_DIVIDER = ` | `;
-  private MIN_HOURS_BETWEEN_NOTIFICATIONS: 2;
+  private MIN_HOURS_BETWEEN_NOTIFICATIONS = 2;
   private APPS_SCRIPTS_PROPERTIES = {
     lastNotify: 'LAST_NOTIFY'
   };
@@ -59,6 +61,7 @@ export default class TwitchNotifier {
   constructor(private config: Config) {
     this.validateConfigs(config);
     this.config = config;
+    this.CURRENT_DATETIME = this.getDateFixedByTimezone(new Date()).toISOString();
     this.logger(`${this.APPNAME} is running at version ${this.VERSION} in ${this.ENVIRONMENT} environment`);
     this.logger(`check the docs for your version here: ${`https://github.com/${this.GITHUB_REPOSITORY}/tree/v${this.VERSION}#readme`}`);
   }
@@ -110,20 +113,14 @@ export default class TwitchNotifier {
     console.log(message);
   }
 
-  private getDateFixedByTimezone(timeZoneIndex: number) {
-    const date = new Date();
-    date.setHours(date.getHours() + timeZoneIndex);
-    return date;
-  }
-
-  private getDatefixedByTimezone(date: Date) {
-    const diffHoursFromUtc = -3;
+  private getDateFixedByTimezone(date: Date) {
+    const diffHoursFromUtc = this.config.settings.timeZoneCorrection;
     date.setHours(date.getHours() + diffHoursFromUtc);
     return date;
   }
 
   private getMinutesDiff(dateOne: Date, dateTwo: Date) {
-    const minutes = Math.floor(Math.abs(Number(this.getDatefixedByTimezone(new Date(dateTwo))) - Number(this.getDatefixedByTimezone(new Date(dateOne)))) / 1000 / 60);
+    const minutes = Math.floor(Math.abs(Number(this.getDateFixedByTimezone(new Date(dateTwo))) - Number(this.getDateFixedByTimezone(new Date(dateOne)))) / 1000 / 60);
     return minutes;
   }
 
@@ -318,7 +315,7 @@ export default class TwitchNotifier {
     }
 
     const dataObject: any = data;
-    const streamLiveStartDatetime = dataObject ? this.getDatefixedByTimezone(new Date(dataObject.uploadDate)).toISOString() : '';
+    const streamLiveStartDatetime = dataObject ? this.getDateFixedByTimezone(new Date(dataObject.uploadDate)).toISOString() : '';
     const uptime = this.getMinutesDiff(new Date(this.CURRENT_DATETIME), new Date(streamLiveStartDatetime));
 
     const parsedData: ChannelWithInfo = {
@@ -350,10 +347,10 @@ export default class TwitchNotifier {
     this.updateAppsScriptProperty(this.APPS_SCRIPTS_PROPERTIES.lastNotify, newPropertyStr);
   }
 
-  private showNextChannelsToNotify(channelsWithInfo: ChannelWithInfo[]) {
-    const channels = channelsWithInfo.map((item) => [item.streamName, item.streamIsLive, item.streamLiveUptimeMinutes]).sort((a, b) => Number(b[1]) - Number(a[1]));
+  private showNextChannelsToNotify(channelsWithInfo: ChannelWithInfoWithReason[]) {
+    const channels = channelsWithInfo.map((item) => [item.streamName, item.streamIsLive, item.streamLiveUptimeMinutes, item.reasonToNotNotify.join(', ')]).sort((a, b) => Number(b[1]) - Number(a[1]));
     const maxStringLength = Math.max(...channels.map((item) => item[0].toString().length));
-    const parsedChannels = channels.map((item) => `${item[0]}${' '.repeat(maxStringLength - item[0].toString().length)} - ${item[1] ? 'online ' : 'offline'}${isNaN(Number(item[2])) ? '' : ' - ' + Number(Number(item[2]) / 60).toFixed(2) + ' hours'}`).join('\n');
+    const parsedChannels = channels.map((item) => `${item[0]}${' '.repeat(maxStringLength - item[0].toString().length)} - ${item[1] ? 'online ' : 'offline'}${isNaN(Number(item[2])) ? '' : ' - ' + Number(Number(item[2]) / 60).toFixed(2) + ' hours'} - ${item[3]}`).join('\n');
     return parsedChannels;
   }
 
@@ -372,48 +369,52 @@ export default class TwitchNotifier {
 
   /* SECONDARY FUNCTIONS ==================================================== */
 
-  filterStreamersToNotify(channelsWithInfoArr: ChannelWithInfo[]) {
-    // (neverNotified || startedLive < 60) && isOnline && last notification > MIN_HOURS_BETWEEN_NOTIFICATION
-    let channelsToNotify: ChannelWithInfo[] = [];
-
+  addReasonNotToNotifyIntoStreamersData(channelsWithInfoArr: ChannelWithInfo[]) {
     const lastNotified = this.getLastNotifiedChannels();
+    const globalIgnoredWords = this.config.twitch.ignoredWords.map((igWord) => igWord.toLowerCase());
 
-    // filter only streams that are live
-    channelsToNotify = channelsWithInfoArr.filter((channelInfo) => channelInfo.streamIsLive);
+    const channelsToNotify: ChannelWithInfoWithReason[] = channelsWithInfoArr.map((stream) => {
+      const reasonToNotNotify = [];
+      const isStreamOnline = stream.streamIsLive;
 
-    // filter only streams that dont contain any global ignored words
-    channelsToNotify = channelsToNotify.filter((channelInfo) => this.config.twitch.ignoredWords.map((igWord) => igWord.toLowerCase()).every((word) => channelInfo.streamLiveDescription.toLowerCase().search(word) === -1));
+      if (!isStreamOnline) {
+        reasonToNotNotify.push('offline');
+      }
 
-    // filter only streams that dont contain any specific ignored words
-    channelsToNotify = channelsToNotify.filter((channelInfo) => {
-      const currentStream = this.config.twitch.channels.find((channel) => channel[0] === channelInfo.streamName);
-      return !currentStream[1].ignoredWords ? true : currentStream[1].ignoredWords.map((igWord) => igWord.toLowerCase()).every((word) => channelInfo.streamLiveDescription.toLowerCase().search(word) === -1);
-    });
+      const wasStreamOpenRecently = stream.streamLiveUptimeMinutes < this.config.twitch.maximumUptimeMinutes;
+      if (!wasStreamOpenRecently) {
+        reasonToNotNotify.push('not_open_recently');
+      }
 
-    // filter only streams that contain at least one specific searched words
-    channelsToNotify = channelsToNotify.filter((channelInfo) => {
-      const currentStream = this.config.twitch.channels.find((channel) => channel[0] === channelInfo.streamName);
-      return !currentStream[1].searchedWords ? true : currentStream[1].searchedWords.map((searchedWord) => searchedWord.toLowerCase()).some((word) => channelInfo.streamLiveDescription.toLowerCase().search(word) > -1);
-    });
+      const containGlobalIgnoredWord = globalIgnoredWords.length === 0 ? false : globalIgnoredWords.some((word) => stream.streamLiveDescription.toLowerCase().search(word) > -1);
+      if (containGlobalIgnoredWord) {
+        reasonToNotNotify.push('contain_global_ignored_words');
+      }
 
-    // filter streams that were (a) were not notified yet or start at maximum 60 minutes ago
-    channelsToNotify = channelsToNotify.filter((channelInfo) => {
-      const isChannelAlreadyNotified = lastNotified.map((item) => item[0]).includes(channelInfo.streamName);
-      const result = !isChannelAlreadyNotified ? true : channelInfo.streamLiveUptimeMinutes < this.config.twitch.maximumUptimeMinutes;
-      return result;
-    });
+      const currentStreamSettings = this.config.twitch.channels.find((channel) => channel[0] === stream.streamName);
+      const currentStreamIgnoredWords = !currentStreamSettings[1].ignoredWords ? [] : currentStreamSettings[1].ignoredWords.map((igWord) => igWord.toLowerCase());
+      const containSpecificIgnoredWords = !currentStreamSettings[1].ignoredWords ? false : currentStreamIgnoredWords.some((word) => stream.streamLiveDescription.toLowerCase().search(word) > -1);
+      if (containSpecificIgnoredWords) {
+        reasonToNotNotify.push('contain_specific_ignored_words');
+      }
 
-    // filter items that not have been notified in the last two hours
-    // this prevents receiving a lot of emails in case the stream keeps restarting
-    channelsToNotify = channelsToNotify.filter((channelInfo) => {
-      const onlyValidItems = lastNotified
-        .filter((item) => {
-          const diffMinutes = this.getMinutesDiff(this.getDatefixedByTimezone(new Date()), new Date(item[1]));
-          const minutesToCompare = this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
-          return diffMinutes < minutesToCompare;
-        })
-        .map((item) => item[0]);
-      return onlyValidItems.includes(channelInfo.streamName) === false;
+      const currentStreamSearchedWords = !currentStreamSettings[1].searchedWords ? [] : currentStreamSettings[1].searchedWords.map((searchedWord) => searchedWord.toLowerCase());
+      const containSpecificSearchedWords = !currentStreamSettings[1].searchedWords ? true : currentStreamSearchedWords.some((word) => stream.streamLiveDescription.toLowerCase().search(word) > -1);
+      if (!containSpecificSearchedWords) {
+        reasonToNotNotify.push('does_not_contain_searched_words');
+      }
+
+      const currentStreamLastNotifiedInfo = lastNotified.filter((item) => item[0] === stream.streamName);
+      const wasStreamRecentlyNotified = !currentStreamLastNotifiedInfo ? false : this.getMinutesDiff(this.getDateFixedByTimezone(new Date()), this.getDateFixedByTimezone(new Date(currentStreamLastNotifiedInfo[0][1]))) < this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
+
+      if (wasStreamRecentlyNotified) {
+        reasonToNotNotify.push('notified_recently');
+      }
+
+      return {
+        ...stream,
+        reasonToNotNotify: reasonToNotNotify
+      };
     });
 
     return channelsToNotify;
@@ -440,10 +441,12 @@ export default class TwitchNotifier {
       this.logger(`skipping run since it [${currentHour}] is a disable hour`);
       return;
     }
+
     this.addMissingProperties();
 
     const channelsInfo = await this.getTwichStreamersData();
-    const channelsToNotify = this.filterStreamersToNotify(channelsInfo);
+    const channelsInfoWithReasonsToNotNotify = this.addReasonNotToNotifyIntoStreamersData(channelsInfo);
+    const channelsToNotify = channelsInfoWithReasonsToNotNotify.filter((item) => item.reasonToNotNotify.length === 0);
 
     if (channelsToNotify.length > 0) {
       this.sendEmail(channelsToNotify);
@@ -451,11 +454,11 @@ export default class TwitchNotifier {
       this.logger(`notified about ${channelsToNotify.length} live streamers`);
     } else {
       this.logger('no streamers went live recently');
-      this.logger(this.showNextChannelsToNotify(channelsInfo));
+      this.logger(this.showNextChannelsToNotify(channelsInfoWithReasonsToNotNotify));
     }
   }
 
-  setup() {
+  install() {
     this.addAppsScriptsTrigger(this.config.settings.checkFunction, this.config.settings.minutesBetweenChecks);
     this.addMissingProperties();
     this.logger('installed looping');

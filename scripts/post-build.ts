@@ -99,7 +99,7 @@ function checkLiveStreams() {
 
 function setup() {
   const twitchNotifier = getTwitchNotifier();
-  twitchNotifier.setup();
+  twitchNotifier.install();
 }
 
 function uninstall() {

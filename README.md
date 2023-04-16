@@ -58,7 +58,7 @@
 
 Receive an **email** informing whenever your **favorite twitch streamers go live**.
 
-I developed this solution because I find twitch way to [handle notifications](https://www.twitch.tv/settings/notifications) are not so optimized when you follow a lot of streamers, since you have to disable all the ones you don't want to receive notifications, rather than select only the streamers you want to get notified about.
+I developed this solution because I find twitch way to [handle notifications](https://www.twitch.tv/settings/notifications) is not so optimized when you follow a lot of streamers, since you have to disable all the ones you don't want to receive notifications, rather than select only the streamers you want to get notified about.
 
 <div align="center">
   <table align="center">
@@ -81,8 +81,10 @@ So this tool allows me to disable all twitch notifications and get notified when
 
 ## :dart: Features<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
-&nbsp;&nbsp;&nbsp;✔️ receive email informing whenever your favorite streamers go live;<br>
-&nbsp;&nbsp;&nbsp;✔️ set custom filtering words to ignore or to consider: you can skip email notification when the live title contains the word 'rerun', for instance.<br>
+&nbsp;&nbsp;&nbsp;✔️ receive an email informing whenever your favorite streamers go live;<br>
+&nbsp;&nbsp;&nbsp;✔️ set custom filtering words to ignore: skip notifications when the live title contains the word 'rerun', for instance;<br>
+&nbsp;&nbsp;&nbsp;✔️ set custom filtering words to search: you will be notified only when the live title contains the word 'live', for example;<br>
+&nbsp;&nbsp;&nbsp;✔️ option to hours to not get notifications, like between 0-6 am.<br>
 
 ## :warning: Requirements<a href="#TOC"><img align="right" src="./.github/images/up_arrow.png" width="22"></a>
 
@@ -160,7 +162,7 @@ function checkLiveStreams() {
 
 function setup() {
   const twitchNotifier = getTwitchNotifier();
-  twitchNotifier.setup();
+  twitchNotifier.install();
 }
 
 function uninstall() {
