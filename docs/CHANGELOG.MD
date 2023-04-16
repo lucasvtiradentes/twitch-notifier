@@ -1,5 +1,12 @@
 # CHANGELOG HISTORY
 
+## [1.1.2](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.1.1...v1.1.2) (2023-04-16)
+
+
+### 🐛 bugfix:
+
+* requirements to notify stream ([#7](https://github.com/lucasvtiradentes/twitch-notifier/issues/7)) ([6c9cdd7](https://github.com/lucasvtiradentes/twitch-notifier/commit/6c9cdd7d7f0c9b7e2b812aa185ad537a37be0070))
+
 ## [1.1.1](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.1.0...v1.1.1) (2023-04-15)
 
 ## [1.1.0](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.0.1...v1.1.0) (2023-04-15)
