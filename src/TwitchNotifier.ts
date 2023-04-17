@@ -350,7 +350,7 @@ export default class TwitchNotifier {
   private showNextChannelsToNotify(channelsWithInfo: ChannelWithInfoWithReason[]) {
     const channels = channelsWithInfo.map((item) => [item.streamName, item.streamIsLive, item.streamLiveUptimeMinutes, item.reasonToNotNotify.join(', ')]).sort((a, b) => Number(b[1]) - Number(a[1]));
     const maxStringLength = Math.max(...channels.map((item) => item[0].toString().length));
-    const parsedChannels = channels.map((item) => `${item[0]}${' '.repeat(maxStringLength - item[0].toString().length)} - ${item[1] ? 'online ' : 'offline'}${isNaN(Number(item[2])) ? '' : ' - ' + Number(Number(item[2]) / 60).toFixed(2) + ' hours'} - ${item[3]}`).join('\n');
+    const parsedChannels = channels.map((item) => `${item[0]}${' '.repeat(maxStringLength - item[0].toString().length)} - ${item[1] ? 'online ' : 'offline'}${isNaN(Number(item[2])) ? '' : ' - ' + String(Number(Number(item[2]) / 60).toFixed(2)).padStart(5, '0') + ' hours'}${isNaN(Number(item[2])) ? '' : ` - ${item[3]}`}`).join('\n');
     return parsedChannels;
   }
 
@@ -381,9 +381,9 @@ export default class TwitchNotifier {
         reasonToNotNotify.push('offline');
       }
 
-      const wasStreamOpenRecently = stream.streamLiveUptimeMinutes < this.config.twitch.maximumUptimeMinutes;
-      if (!wasStreamOpenRecently) {
-        reasonToNotNotify.push('not_open_recently');
+      const wasStreamStartedRecently = stream.streamLiveUptimeMinutes < this.config.twitch.maximumUptimeMinutes;
+      if (!wasStreamStartedRecently) {
+        reasonToNotNotify.push('not_started_recently');
       }
 
       const containGlobalIgnoredWord = globalIgnoredWords.length === 0 ? false : globalIgnoredWords.some((word) => stream.streamLiveDescription.toLowerCase().search(word) > -1);
@@ -405,7 +405,7 @@ export default class TwitchNotifier {
       }
 
       const currentStreamLastNotifiedInfo = lastNotified.filter((item) => item[0] === stream.streamName);
-      const wasStreamRecentlyNotified = !currentStreamLastNotifiedInfo ? false : this.getMinutesDiff(this.getDateFixedByTimezone(new Date()), this.getDateFixedByTimezone(new Date(currentStreamLastNotifiedInfo[0][1]))) < this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
+      const wasStreamRecentlyNotified = !currentStreamLastNotifiedInfo ? false : this.getMinutesDiff(this.getDateFixedByTimezone(new Date()), new Date(currentStreamLastNotifiedInfo[0][1])) < this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
 
       if (wasStreamRecentlyNotified) {
         reasonToNotNotify.push('notified_recently');
