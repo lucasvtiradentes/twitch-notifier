@@ -1,5 +1,12 @@
 # CHANGELOG HISTORY
 
+## [1.1.4](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.1.3...v1.1.4) (2023-04-26)
+
+
+### 🐛 bugfix:
+
+* update twitch scrapper ([#10](https://github.com/lucasvtiradentes/twitch-notifier/issues/10)) ([21f7ac2](https://github.com/lucasvtiradentes/twitch-notifier/commit/21f7ac2866743e7463f978bb9a169bc0ae594863))
+
 ## [1.1.3](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.1.2...v1.1.3) (2023-04-17)
 
 ## [1.1.2](https://github.com/lucasvtiradentes/twitch-notifier/compare/v1.1.1...v1.1.2) (2023-04-16)
