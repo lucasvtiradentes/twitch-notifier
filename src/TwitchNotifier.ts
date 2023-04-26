@@ -230,7 +230,7 @@ export default class TwitchNotifier {
   }
 
   private sendEmail(channels: ChannelWithInfo[]) {
-    const singleChannelLive = `Twitch notifier - ${channels[0].streamName} is live`;
+    const singleChannelLive = `Twitch notifier - ${channels[0].streamName} is live - ${channels[0].streamLiveDescription}`;
     const multiChannelsLive = `Twitch notifier - ${channels.length} channels live: ${channels
       .map((item) => item.streamName)
       .slice(0, 5)
@@ -405,7 +405,8 @@ export default class TwitchNotifier {
       }
 
       const currentStreamLastNotifiedInfo = lastNotified.filter((item) => item[0] === stream.streamName);
-      const wasStreamRecentlyNotified = !currentStreamLastNotifiedInfo ? false : this.getMinutesDiff(this.getDateFixedByTimezone(new Date()), new Date(currentStreamLastNotifiedInfo[0][1])) < this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
+      const streamLastNotifiedDate = currentStreamLastNotifiedInfo[0] ? new Date(currentStreamLastNotifiedInfo[0][1]) : new Date();
+      const wasStreamRecentlyNotified = currentStreamLastNotifiedInfo.length === 0 ? false : this.getMinutesDiff(this.getDateFixedByTimezone(new Date()), streamLastNotifiedDate) < this.MIN_HOURS_BETWEEN_NOTIFICATIONS * 60;
 
       if (wasStreamRecentlyNotified) {
         reasonToNotNotify.push('notified_recently');
